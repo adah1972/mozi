@@ -81,25 +81,27 @@ constexpr void zip_impl(T&& obj1, U&& obj2, F&& f,
 } // namespace detail
 
 template <typename T, typename = void>
-struct is_reflected : std::false_type {};
+struct is_reflected_struct : std::false_type {};
 
 template <typename T>
-struct is_reflected<T, std::void_t<typename T::is_mozi_reflected>>
+struct is_reflected_struct<T, std::void_t<typename T::is_mozi_reflected>>
     : std::true_type {};
 
 template <typename T>
-inline constexpr static bool is_reflected_v = is_reflected<T>::value;
+inline constexpr static bool is_reflected_struct_v =
+    is_reflected_struct<T>::value;
 
 template <typename T, typename F,
-          std::enable_if_t<is_reflected_v<T>, bool> = true>
+          std::enable_if_t<is_reflected_struct_v<T>, bool> = true>
 constexpr void for_each_meta(F&& f)
 {
     detail::for_each_meta_impl<T>(std::forward<F>(f),
                                   std::make_index_sequence<T::_size>{});
 }
 
-template <typename T, typename F,
-          std::enable_if_t<is_reflected_v<std::decay_t<T>>, bool> = true>
+template <
+    typename T, typename F,
+    std::enable_if_t<is_reflected_struct_v<std::decay_t<T>>, bool> = true>
 constexpr void for_each(T&& obj, F&& f)
 {
     using DT = std::decay_t<T>;
@@ -108,8 +110,8 @@ constexpr void for_each(T&& obj, F&& f)
 }
 
 template <typename T, typename U, typename F,
-          std::enable_if_t<(is_reflected_v<std::decay_t<T>> &&
-                            is_reflected_v<std::decay_t<U>>),
+          std::enable_if_t<(is_reflected_struct_v<std::decay_t<T>> &&
+                            is_reflected_struct_v<std::decay_t<U>>),
                            bool> = true>
 constexpr void zip(T&& obj1, U&& obj2, F&& f)
 {
@@ -123,7 +125,8 @@ constexpr void zip(T&& obj1, U&& obj2, F&& f)
 
 template <typename T, typename U>
 struct copier<T, U,
-              std::enable_if_t<is_reflected_v<T> && is_reflected_v<U>>> {
+              std::enable_if_t<is_reflected_struct_v<T> &&
+                               is_reflected_struct_v<U>>> {
     void operator()(const T& src, U& dest)
     {
         zip(src, dest,
@@ -143,7 +146,7 @@ struct copier<T, U,
 };
 
 template <typename T, typename Name,
-          std::enable_if_t<is_reflected_v<T>, bool> = true>
+          std::enable_if_t<is_reflected_struct_v<T>, bool> = true>
 constexpr std::size_t get_field_index(Name /*name*/)
 {
     auto result = SIZE_MAX;
@@ -157,8 +160,8 @@ constexpr std::size_t get_field_index(Name /*name*/)
 }
 
 template <typename T, typename U,
-          std::enable_if_t<(is_reflected_v<std::decay_t<T>> &&
-                            is_reflected_v<std::decay_t<U>>),
+          std::enable_if_t<(is_reflected_struct_v<std::decay_t<T>> &&
+                            is_reflected_struct_v<std::decay_t<U>>),
                            bool> = true>
 constexpr std::size_t count_missing_fields()
 {
@@ -195,7 +198,7 @@ constexpr void copy_same_name_fields(T&& src, U& dest) // NOLINT
 
 template <
     std::size_t I, typename T,
-    std::enable_if_t<mozi::is_reflected_v<std::decay_t<T>>, bool> = true>
+    std::enable_if_t<is_reflected_struct_v<std::decay_t<T>>, bool> = true>
 constexpr decltype(auto) get(T&& obj)
 {
     static_assert(I < std::decay_t<T>::_size,
