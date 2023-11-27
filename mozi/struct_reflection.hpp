@@ -51,11 +51,9 @@ template <
     std::enable_if_t<is_reflected_struct_v<std::decay_t<T>>, bool> = true>
 constexpr decltype(auto) get(T&& obj)
 {
-    static_assert(I < std::decay_t<T>::_size,
-                  "Index to get is out of range");
-    return typename std::decay_t<T>::template _field<T, I>(
-               std::forward<T>(obj))
-        .value();
+    using DT = std::decay_t<T>;
+    static_assert(I < DT::_size, "Index to get is out of range");
+    return typename DT::template _field<T, I>(std::forward<T>(obj)).value();
 }
 
 namespace detail {
