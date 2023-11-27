@@ -35,6 +35,29 @@
 
 namespace mozi {
 
+template <typename T, typename = void>
+struct is_reflected_struct : std::false_type {};
+
+template <typename T>
+struct is_reflected_struct<T, std::void_t<typename T::is_mozi_reflected>>
+    : std::true_type {};
+
+template <typename T>
+inline constexpr static bool is_reflected_struct_v =
+    is_reflected_struct<T>::value;
+
+template <
+    std::size_t I, typename T,
+    std::enable_if_t<is_reflected_struct_v<std::decay_t<T>>, bool> = true>
+constexpr decltype(auto) get(T&& obj)
+{
+    static_assert(I < std::decay_t<T>::_size,
+                  "Index to get is out of range");
+    return typename std::decay_t<T>::template _field<T, I>(
+               std::forward<T>(obj))
+        .value();
+}
+
 namespace detail {
 
 template <typename T>
@@ -56,10 +79,8 @@ template <typename T, typename F, std::size_t... Is>
 constexpr void for_each_impl(T&& obj, F&& f, std::index_sequence<Is...>)
 {
     using DT = std::decay_t<T>;
-    (void(std::forward<F>(f)(
-         DT::template _field<T, Is>::name,
-         typename DT::template _field<T, Is>(std::forward<T>(obj))
-             .value())),
+    (void(std::forward<F>(f)(DT::template _field<T, Is>::name,
+                             get<Is>(std::forward<T>(obj)))),
      ...);
 }
 
@@ -72,24 +93,11 @@ constexpr void zip_impl(T&& obj1, U&& obj2, F&& f,
     static_assert(DT::_size == DU::_size);
     (void(std::forward<F>(f)(
          DT::template _field<T, Is>::name, DU::template _field<U, Is>::name,
-         typename DT::template _field<T, Is>(std::forward<T>(obj1)).value(),
-         typename DU::template _field<U, Is>(std::forward<U>(obj2)).value()
-         /* */)),
+         get<Is>(std::forward<T>(obj1)), get<Is>(std::forward<U>(obj2)))),
      ...);
 }
 
 } // namespace detail
-
-template <typename T, typename = void>
-struct is_reflected_struct : std::false_type {};
-
-template <typename T>
-struct is_reflected_struct<T, std::void_t<typename T::is_mozi_reflected>>
-    : std::true_type {};
-
-template <typename T>
-inline constexpr static bool is_reflected_struct_v =
-    is_reflected_struct<T>::value;
 
 template <typename T, typename F,
           std::enable_if_t<is_reflected_struct_v<T>, bool> = true>
@@ -188,24 +196,9 @@ constexpr void copy_same_name_fields(T&& src, U& dest) // NOLINT
         using DT = std::decay_t<T>;
         constexpr auto field_index = get_field_index<DT>(field_name);
         if constexpr (field_index != SIZE_MAX) {
-            copy(typename DT::template _field<T, field_index>(
-                     std::forward<T>(src))
-                     .value(),
-                 value);
+            copy(get<field_index>(std::forward<T>(src)), value);
         }
     });
-}
-
-template <
-    std::size_t I, typename T,
-    std::enable_if_t<is_reflected_struct_v<std::decay_t<T>>, bool> = true>
-constexpr decltype(auto) get(T&& obj)
-{
-    static_assert(I < std::decay_t<T>::_size,
-                  "Index to get is out of range");
-    return typename std::decay_t<T>::template _field<T, I>(
-               std::forward<T>(obj))
-        .value();
 }
 
 } // namespace mozi
