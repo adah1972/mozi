@@ -31,6 +31,7 @@
 #include <utility>                 // std::forward/(make_)index_sequence
 #include "metamacro.h"             // MOZI_GET_ARG_COUNT/MOZI_REPEAT_ON/...
 #include "compile_time_string.hpp" // MOZI_CTS_STRING
+#include "copier.hpp"              // mozi::copier/copy
 
 namespace mozi {
 
@@ -120,19 +121,25 @@ constexpr void zip(T&& obj1, U&& obj2, F&& f)
 }
 
 template <typename T, typename U>
-constexpr void copy(T&& src, U& dest)
-{
-    if constexpr (is_reflected_v<std::decay_t<T>> &&
-                  is_reflected_v<std::decay_t<U>>) {
-        zip(std::forward<T>(src), dest,
+struct copier<T, U,
+              std::enable_if_t<is_reflected_v<T> && is_reflected_v<U>>> {
+    void operator()(const T& src, U& dest)
+    {
+        zip(src, dest,
+            [](auto /*field_name1*/, auto /*field_name1*/,
+               const auto& value1, auto& value2) {
+                copy(value1, value2);
+            });
+    }
+    void operator()(T&& src, U& dest)
+    {
+        zip(std::move(src), dest,
             [](auto /*field_name1*/, auto /*field_name1*/,
                auto&& value1, auto& value2) {
                 copy(std::forward<decltype(value1)>(value1), value2);
             });
-    } else {
-        dest = std::forward<T>(src);
     }
-}
+};
 
 template <typename T, typename Name,
           std::enable_if_t<is_reflected_v<T>, bool> = true>
