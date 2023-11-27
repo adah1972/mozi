@@ -138,7 +138,7 @@ struct copier<T, U,
     void operator()(const T& src, U& dest)
     {
         zip(src, dest,
-            [](auto /*field_name1*/, auto /*field_name1*/,
+            [](auto /*name1*/, auto /*name2*/,
                const auto& value1, auto& value2) {
                 copy(value1, value2);
             });
@@ -146,7 +146,7 @@ struct copier<T, U,
     void operator()(T&& src, U& dest)
     {
         zip(std::move(src), dest,
-            [](auto /*field_name1*/, auto /*field_name1*/,
+            [](auto /*field_name1*/, auto /*name2*/,
                auto&& value1, auto& value2) {
                 copy(std::forward<decltype(value1)>(value1), value2);
             });
@@ -155,7 +155,7 @@ struct copier<T, U,
 
 template <typename T, typename Name,
           std::enable_if_t<is_reflected_struct_v<T>, bool> = true>
-constexpr std::size_t get_field_index(Name /*name*/)
+constexpr std::size_t get_index(Name /*name*/)
 {
     auto result = SIZE_MAX;
     for_each_meta<T>(
@@ -176,7 +176,7 @@ constexpr std::size_t count_missing_fields()
     std::size_t result = 0;
     for_each_meta<U>(
         [&result](std::size_t /*index*/, auto name, auto /*type*/) {
-            if constexpr (get_field_index<T>(name) == SIZE_MAX) {
+            if constexpr (get_index<T>(name) == SIZE_MAX) {
                 ++result;
             }
         });
@@ -192,11 +192,11 @@ constexpr void copy_same_name_fields(T&& src, U& dest) // NOLINT
     constexpr size_t actual_missing_fields =
         count_missing_fields<std::decay_t<T>, std::decay_t<U>>();
     static_assert(size_t(MissingFields) == actual_missing_fields);
-    for_each(dest, [&src](auto field_name, auto& value) {
+    for_each(dest, [&src](auto name, auto& value) {
         using DT = std::decay_t<T>;
-        constexpr auto field_index = get_field_index<DT>(field_name);
-        if constexpr (field_index != SIZE_MAX) {
-            copy(get<field_index>(std::forward<T>(src)), value);
+        constexpr auto index = get_index<DT>(name);
+        if constexpr (index != SIZE_MAX) {
+            copy(get<index>(std::forward<T>(src)), value);
         }
     });
 }
