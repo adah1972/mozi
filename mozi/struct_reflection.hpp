@@ -28,7 +28,7 @@
 #include <cstddef>                 // std::size_t
 #include <cstdint>                 // SIZE_MAX
 #include <type_traits>             // std::decay/enable_if/is_same/...
-#include <utility>                 // std::forward/(make_)index_sequence
+#include <utility>                 // std::forward/move/index_sequence/...
 #include "metamacro.h"             // MOZI_GET_ARG_COUNT/MOZI_REPEAT_ON/...
 #include "compile_time_string.hpp" // MOZI_CTS_STRING
 #include "copier.hpp"              // mozi::copier/copy
@@ -84,7 +84,8 @@ template <typename T, typename = void>
 struct is_reflected : std::false_type {};
 
 template <typename T>
-struct is_reflected<T, std::void_t<decltype(T::_size)>> : std::true_type {};
+struct is_reflected<T, std::void_t<typename T::is_mozi_reflected>>
+    : std::true_type {};
 
 template <typename T>
 inline constexpr static bool is_reflected_v = is_reflected<T>::value;
@@ -232,6 +233,7 @@ using mozi::operator""_cts;
 
 #define MOZI_DEFINE_STRUCT(st, ...)                                        \
     struct st {                                                            \
+        using is_mozi_reflected = void;                                    \
         template <typename, std::size_t>                                   \
         struct _field;                                                     \
         static constexpr std::size_t _size =                               \
