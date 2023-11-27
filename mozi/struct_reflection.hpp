@@ -190,7 +190,7 @@ constexpr void copy_same_name_fields(T&& src, U& dest) // NOLINT
 template <
     std::size_t I, typename T,
     std::enable_if_t<mozi::is_reflected_v<std::decay_t<T>>, bool> = true>
-decltype(auto) get(T&& obj)
+constexpr decltype(auto) get(T&& obj)
 {
     static_assert(I < std::decay_t<T>::_size,
                   "Index to get is out of range");
@@ -210,13 +210,18 @@ using mozi::operator""_cts;
     MOZI_PAIR(arg);                                                        \
     template <typename T>                                                  \
     struct _field<T, i> {                                                  \
-        _field(T&& obj) : obj_(std::forward<T>(obj)) {} /* NOLINT */       \
-        static constexpr auto name = MOZI_CTS_STRING(MOZI_STRIP(arg));     \
         using type = decltype(std::decay_t<T>::MOZI_STRIP(arg));           \
-        decltype(auto) value()                                             \
+        static constexpr auto name = MOZI_CTS_STRING(MOZI_STRIP(arg));     \
+        constexpr explicit _field(T&& obj) /* NOLINT */                    \
+            : obj_(std::forward<T>(obj))                                   \
+        {                                                                  \
+        }                                                                  \
+        constexpr decltype(auto) value()                                   \
         {                                                                  \
             return (std::forward<T>(obj_).MOZI_STRIP(arg));                \
         }                                                                  \
+                                                                           \
+    private:                                                               \
         T&& obj_; /* NOLINT */                                             \
     };
 
