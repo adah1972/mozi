@@ -72,20 +72,18 @@ constexpr void zip_impl(T&& obj1, U&& obj2, F&& f,
     (void(std::forward<F>(f)(
          DT::template _field<T, Is>::name, DU::template _field<U, Is>::name,
          typename DT::template _field<T, Is>(std::forward<T>(obj1)).value(),
-         typename DU::template _field<U, Is>(std::forward<U>(obj2))
-             .value())),
+         typename DU::template _field<U, Is>(std::forward<U>(obj2)).value()
+         /* */)),
      ...);
 }
 
 } // namespace detail
 
 template <typename T, typename = void>
-struct is_reflected : std::false_type {
-};
+struct is_reflected : std::false_type {};
 
 template <typename T>
-struct is_reflected<T, std::void_t<decltype(T::_size)>> : std::true_type {
-};
+struct is_reflected<T, std::void_t<decltype(T::_size)>> : std::true_type {};
 
 template <typename T>
 inline constexpr static bool is_reflected_v = is_reflected<T>::value;
@@ -168,8 +166,8 @@ constexpr std::size_t count_missing_fields()
 
 enum class missing_fields : std::size_t {};
 
-template <missing_fields MissingFields = missing_fields{0}, typename T,
-          typename U>
+template <missing_fields MissingFields = missing_fields{0},
+          typename T, typename U>
 constexpr void copy_same_name_fields(T&& src, U& dest) // NOLINT
 {
     constexpr size_t actual_missing_fields =
