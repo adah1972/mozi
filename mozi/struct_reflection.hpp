@@ -106,8 +106,8 @@ constexpr void for_each(T&& obj, F&& f)
 }
 
 template <typename T, typename U, typename F,
-          std::enable_if_t<is_reflected_v<std::decay_t<T>> &&
-                           is_reflected_v<std::decay_t<U>>,
+          std::enable_if_t<(is_reflected_v<std::decay_t<T>> &&
+                            is_reflected_v<std::decay_t<U>>),
                            bool> = true>
 constexpr void zip(T&& obj1, U&& obj2, F&& f)
 {
@@ -149,8 +149,8 @@ constexpr std::size_t get_field_index(Name /*name*/)
 }
 
 template <typename T, typename U,
-          std::enable_if_t<is_reflected_v<std::decay_t<T>> &&
-                           is_reflected_v<std::decay_t<U>>,
+          std::enable_if_t<(is_reflected_v<std::decay_t<T>> &&
+                            is_reflected_v<std::decay_t<U>>),
                            bool> = true>
 constexpr std::size_t count_missing_fields()
 {
