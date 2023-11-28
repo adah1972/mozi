@@ -132,7 +132,7 @@ template <typename T, typename U>
 struct copier<T, U,
               std::enable_if_t<is_reflected_struct_v<T> &&
                                is_reflected_struct_v<U>>> {
-    void operator()(const T& src, U& dest)
+    void operator()(const T& src, U& dest) const
     {
         zip(src, dest,
             [](auto /*name1*/, auto /*name2*/,
@@ -140,7 +140,7 @@ struct copier<T, U,
                 copy(value1, value2);
             });
     }
-    void operator()(T&& src, U& dest)
+    void operator()(T&& src, U& dest) const
     {
         zip(std::move(src), dest,
             [](auto /*field_name1*/, auto /*name2*/,

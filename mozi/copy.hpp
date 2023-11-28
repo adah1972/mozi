@@ -31,11 +31,11 @@ namespace mozi {
 
 template <typename T, typename U, typename = void>
 struct copier {
-    void operator()(const T& src, U& dest)
+    void operator()(const T& src, U& dest) const
     {
         dest = src;
     }
-    void operator()(T&& src, U& dest)
+    void operator()(T&& src, U& dest) const
     {
         dest = std::move(src);
     }
