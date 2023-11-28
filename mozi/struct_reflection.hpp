@@ -46,9 +46,8 @@ template <typename T>
 inline constexpr static bool is_reflected_struct_v =
     is_reflected_struct<T>::value;
 
-template <
-    std::size_t I, typename T,
-    std::enable_if_t<is_reflected_struct_v<std::decay_t<T>>, bool> = true>
+template <std::size_t I, typename T,
+          std::enable_if_t<is_reflected_struct_v<std::decay_t<T>>, int> = 0>
 constexpr decltype(auto) get(T&& obj)
 {
     using DT = std::decay_t<T>;
@@ -98,7 +97,7 @@ constexpr void zip_impl(T&& obj1, U&& obj2, F&& f,
 } // namespace detail
 
 template <typename T, typename F,
-          std::enable_if_t<is_reflected_struct_v<T>, bool> = true>
+          std::enable_if_t<is_reflected_struct_v<T>, int> = 0>
 constexpr void for_each_meta(F&& f)
 {
     detail::for_each_meta_impl<T>(std::forward<F>(f),
@@ -107,7 +106,7 @@ constexpr void for_each_meta(F&& f)
 
 template <
     typename T, typename F,
-    std::enable_if_t<is_reflected_struct_v<std::decay_t<T>>, bool> = true>
+    std::enable_if_t<is_reflected_struct_v<std::decay_t<T>>, int> = 0>
 constexpr void for_each(T&& obj, F&& f)
 {
     using DT = std::decay_t<T>;
@@ -118,7 +117,7 @@ constexpr void for_each(T&& obj, F&& f)
 template <typename T, typename U, typename F,
           std::enable_if_t<(is_reflected_struct_v<std::decay_t<T>> &&
                             is_reflected_struct_v<std::decay_t<U>>),
-                           bool> = true>
+                           int> = 0>
 constexpr void zip(T&& obj1, U&& obj2, F&& f)
 {
     using DT = std::decay_t<T>;
@@ -152,7 +151,7 @@ struct copier<T, U,
 };
 
 template <typename T, typename Name,
-          std::enable_if_t<is_reflected_struct_v<T>, bool> = true>
+          std::enable_if_t<is_reflected_struct_v<T>, int> = 0>
 constexpr std::size_t get_index(Name /*name*/)
 {
     auto result = SIZE_MAX;
@@ -168,7 +167,7 @@ constexpr std::size_t get_index(Name /*name*/)
 template <typename T, typename U,
           std::enable_if_t<(is_reflected_struct_v<std::decay_t<T>> &&
                             is_reflected_struct_v<std::decay_t<U>>),
-                           bool> = true>
+                           int> = 0>
 constexpr std::size_t count_missing_fields()
 {
     std::size_t result = 0;
