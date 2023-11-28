@@ -29,12 +29,24 @@
 #include <cstddef>     // std::size_t
 #include <string>      // std::string
 #include <string_view> // std::string_view
-#include <type_traits> // std::decay
+#include <type_traits> // std::decay/underlying_type/void_t/...
 #include <utility>     // std::pair
 #include <vector>      // std::vector
 #include "metamacro.h" // MOZI_GET_ARG_COUNT/MOZI_REPEAT_FIRST_ON
 
 namespace mozi {
+
+template <typename T, typename = void>
+struct is_reflected_enum : std::false_type {};
+
+template <typename T>
+struct is_reflected_enum<T,
+                         std::void_t<decltype(is_mozi_reflected_enum(T{}))>>
+    : std::true_type {};
+
+template <typename T>
+inline constexpr static bool is_reflected_enum_v =
+    is_reflected_enum<T>::value;
 
 enum class enum_to_string { no_show_name, show_name };
 
@@ -241,7 +253,8 @@ constexpr std::underlying_type_t<Enum> to_underlying(Enum e) noexcept
             e##_enum_map_.begin(), e##_enum_map_.end());                   \
         return mozi::detail::from_string_impl(                             \
             name, value, name_value_map.begin(), name_value_map.end());    \
-    }
+    }                                                                      \
+    bool is_mozi_reflected_enum(e) /* declaration for is_reflected_enum */
 
 #define MOZI_DEFINE_ENUM(e, u, ...)                                        \
     enum e : u { __VA_ARGS__ };                                            \
