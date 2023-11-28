@@ -7,6 +7,11 @@ The Name
 [Mozi][lnk_mozi] was a renowned Chinese philosopher and craftsman, and
 his name sounds very good for a programming project.
 
+While it is OK to pronounce “Mozi” in any way you like (the proper
+Chinese pronunciation is probably too difficult for most of the
+English-speaking community), my preferred English pronunciation is
+“MO-tsee” (/ˈməʊtsiː/).
+
 
 The Project
 -----------
