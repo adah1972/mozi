@@ -31,7 +31,7 @@
 #include <utility>                 // std::forward/move/index_sequence/...
 #include "metamacro.h"             // MOZI_GET_ARG_COUNT/MOZI_REPEAT_ON/...
 #include "compile_time_string.hpp" // MOZI_CTS_STRING
-#include "copier.hpp"              // mozi::copier/copy
+#include "copy.hpp"                // mozi::copier/copy
 
 namespace mozi {
 
