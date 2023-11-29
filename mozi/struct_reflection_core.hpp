@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef MOZI_STRUCT_REFLECTION_HPP
-#define MOZI_STRUCT_REFLECTION_HPP
+#ifndef MOZI_STRUCT_REFLECTION_CORE_HPP
+#define MOZI_STRUCT_REFLECTION_CORE_HPP
 
 #include <cstddef>                 // std::size_t
 #include <cstdint>                 // SIZE_MAX
@@ -244,4 +244,4 @@ using mozi::operator""_cts;
 #define DECLARE_TUPLE_LIKE MOZI_DECLARE_TUPLE_LIKE
 #endif
 
-#endif // MOZI_STRUCT_REFLECTION_HPP
+#endif // MOZI_STRUCT_REFLECTION_CORE_HPP
