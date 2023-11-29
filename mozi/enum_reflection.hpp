@@ -36,18 +36,6 @@
 
 namespace mozi {
 
-template <typename T, typename = void>
-struct is_reflected_enum : std::false_type {};
-
-template <typename T>
-struct is_reflected_enum<T,
-                         std::void_t<decltype(is_mozi_reflected_enum(T{}))>>
-    : std::true_type {};
-
-template <typename T>
-inline constexpr static bool is_reflected_enum_v =
-    is_reflected_enum<T>::value;
-
 enum class enum_to_string { no_show_name, show_name };
 
 namespace detail {

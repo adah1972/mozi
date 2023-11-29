@@ -103,6 +103,31 @@ struct is_char_pointer<
 template <typename T>
 inline constexpr bool is_char_pointer_v = is_char_pointer<T>::value;
 
+// Type trait for reflected enums
+template <typename T, typename = void>
+struct is_reflected_enum : std::false_type {};
+
+template <typename T>
+struct is_reflected_enum<T,
+                         std::void_t<decltype(is_mozi_reflected_enum(T{}))>>
+    : std::true_type {};
+
+template <typename T>
+inline constexpr static bool is_reflected_enum_v =
+    is_reflected_enum<T>::value;
+
+// Type trait for reflected structs
+template <typename T, typename = void>
+struct is_reflected_struct : std::false_type {};
+
+template <typename T>
+struct is_reflected_struct<T, std::void_t<typename T::is_mozi_reflected>>
+    : std::true_type {};
+
+template <typename T>
+inline constexpr static bool is_reflected_struct_v =
+    is_reflected_struct<T>::value;
+
 } // namespace mozi
 
 #endif // MOZI_TYPE_TRAITS_HPP

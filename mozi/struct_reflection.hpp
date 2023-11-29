@@ -32,19 +32,9 @@
 #include "metamacro.h"             // MOZI_GET_ARG_COUNT/MOZI_REPEAT_ON/...
 #include "compile_time_string.hpp" // MOZI_CTS_STRING
 #include "copy.hpp"                // mozi::copier/copy
+#include "type_traits.hpp"         // mozi::is_reflected_struct
 
 namespace mozi {
-
-template <typename T, typename = void>
-struct is_reflected_struct : std::false_type {};
-
-template <typename T>
-struct is_reflected_struct<T, std::void_t<typename T::is_mozi_reflected>>
-    : std::true_type {};
-
-template <typename T>
-inline constexpr static bool is_reflected_struct_v =
-    is_reflected_struct<T>::value;
 
 template <std::size_t I, typename T,
           std::enable_if_t<is_reflected_struct_v<std::decay_t<T>>, int> = 0>
