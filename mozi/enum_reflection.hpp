@@ -226,6 +226,22 @@ constexpr std::underlying_type_t<Enum> to_underlying(Enum e) noexcept
 
 } // namespace mozi
 
+#if defined(__GNUC__)
+#define MOZI_DIAGNOSTIC_PUSH _Pragma("GCC diagnostic push")
+#define MOZI_DIAGNOSTIC_POP _Pragma("GCC diagnostic pop")
+#if defined(__clang__)
+#define MOZI_DISABLE_UNUSED_FUNC_WARNING                                   \
+    _Pragma("GCC diagnostic ignored \"-Wunneeded-internal-declaration\"")
+#else
+#define MOZI_DISABLE_UNUSED_FUNC_WARNING                                   \
+    _Pragma("GCC diagnostic ignored \"-Wunused-function\"")
+#endif
+#else
+#define MOZI_DIAGNOSTIC_PUSH
+#define MOZI_DIAGNOSTIC_POP
+#define MOZI_DISABLE_UNUSED_FUNC_WARNING
+#endif
+
 #define MOZI_ENUM_ITEM(i, e, arg)                                          \
     std::pair{mozi::to_underlying(                                         \
                   e((mozi::detail::eat_assign<e>)e::arg /* NOLINT */)),    \
@@ -257,7 +273,10 @@ constexpr std::underlying_type_t<Enum> to_underlying(Enum e) noexcept
         return mozi::detail::from_string_impl(                             \
             name, value, name_value_map.begin(), name_value_map.end());    \
     }                                                                      \
-    bool is_mozi_reflected_enum(e) /* declaration for is_reflected_enum */
+    MOZI_DIAGNOSTIC_PUSH                                                   \
+    MOZI_DISABLE_UNUSED_FUNC_WARNING                                       \
+    bool is_mozi_reflected_enum(e) /* for is_reflected_enum only */;       \
+    MOZI_DIAGNOSTIC_POP
 
 #define MOZI_DEFINE_ENUM(e, u, ...)                                        \
     enum e : u { __VA_ARGS__ };                                            \
