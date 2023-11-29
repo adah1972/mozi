@@ -104,9 +104,8 @@ constexpr void for_each_meta(F&& f)
                                   std::make_index_sequence<T::_size>{});
 }
 
-template <
-    typename T, typename F,
-    std::enable_if_t<is_reflected_struct_v<std::decay_t<T>>, int> = 0>
+template <typename T, typename F,
+          std::enable_if_t<is_reflected_struct_v<std::decay_t<T>>, int> = 0>
 constexpr void for_each(T&& obj, F&& f)
 {
     using DT = std::decay_t<T>;

@@ -63,7 +63,10 @@ public:
         return *this;
     }
 
-    constexpr operator Enum() const { return value_; }
+    constexpr operator Enum() const
+    {
+        return value_;
+    }
 
 private:
     Enum value_;
