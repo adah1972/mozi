@@ -66,7 +66,7 @@ template <typename T, typename F, std::size_t... Is>
 constexpr void for_each_impl(T&& obj, F&& f, std::index_sequence<Is...>)
 {
     using DT = std::decay_t<T>;
-    (void(std::forward<F>(f)(DT::template _field<T, Is>::name,
+    (void(std::forward<F>(f)(Is, DT::template _field<T, Is>::name,
                              get<Is>(std::forward<T>(obj)))),
      ...);
 }
@@ -178,7 +178,7 @@ constexpr void copy_same_name_fields(T&& src, U& dest) // NOLINT
     constexpr size_t actual_missing_fields =
         count_missing_fields<std::decay_t<T>, std::decay_t<U>>();
     static_assert(size_t(MissingFields) == actual_missing_fields);
-    for_each(dest, [&src](auto name, auto& value) {
+    for_each(dest, [&src](std::size_t /*index*/, auto name, auto& value) {
         using DT = std::decay_t<T>;
         constexpr auto index = get_index<DT>(name);
         if constexpr (index != SIZE_MAX) {
