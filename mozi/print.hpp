@@ -29,6 +29,7 @@
 #include <ostream>         // std::ostream
 #include <string>          // std::string
 #include <string_view>     // std::string_view
+#include <tuple>           // std::tuple_element
 #include <type_traits>     // std::enable_if/decay/is_same
 #include <utility>         // std::forward/pair/index_sequence/...
 #include "type_traits.hpp" // miscellaneous type traits
@@ -37,54 +38,94 @@ namespace mozi {
 
 template <typename T, typename = void>
 struct printer {
-    void operator()(const T& obj, std::ostream& os) const
+    void operator()(const T& obj, std::ostream& os, int /*depth*/) const
     {
         os << obj;
     }
 };
 
 template <typename T>
-void print(T&& obj, std::ostream& os = std::cout)
+void print(T&& obj, std::ostream& os = std::cout, int depth = 0)
 {
-    printer<remove_cvref_t<T>>{}(std::forward<T>(obj), os);
+    printer<remove_cvref_t<T>>{}(std::forward<T>(obj), os, depth);
 }
 
 template <typename T>
-void println(T&& obj, std::ostream& os = std::cout)
+void println(T&& obj, std::ostream& os = std::cout, int depth = 0)
 {
-    print(std::forward<T>(obj), os);
+    print(std::forward<T>(obj), os, depth);
     os << '\n';
 }
 
 namespace detail {
 
+// Stream manipulator for indentation
+class indent {
+public:
+    explicit indent(int n) : n_(n) {}
+    template <typename CharT, typename Traits>
+    friend std::basic_ostream<CharT, Traits>&
+    operator<<(std::basic_ostream<CharT, Traits>& os, const indent& x)
+    {
+        for (int i = 0; i < x.n_; ++i) {
+            os << "    ";
+        }
+        return os;
+    }
+
+private:
+    int n_;
+};
+
+// Helper functions to check whether indentation and newline need to be
+// inserted between objects of specified type
+template <typename T>
+constexpr bool needs_indent();
+template <typename T, std::size_t... Is>
+constexpr bool needs_indent_tuple(std::index_sequence<Is...>)
+{
+    return (needs_indent<std::tuple_element_t<Is, T>>() || ...);
+}
+template <typename T>
+constexpr bool needs_indent()
+{
+    if constexpr (is_reflected_struct_v<T>) {
+        return true;
+    } else if constexpr (is_container_v<T>) {
+        return needs_indent<typename T::value_type>();
+    } else if constexpr (is_tuple_like_v<T>) {
+        return needs_indent_tuple<T>(
+            std::make_index_sequence<std::tuple_size_v<T>>{});
+    }
+    return false;
+}
+
 // Element output function for containers that define a key_type and
 // have its value type as std::pair
-template <typename T, typename Rng>
-auto output_element(std::ostream& os, const T& element, const Rng&,
+template <typename T>
+void output_element(std::ostream& os, const T& element, int depth,
                     std::true_type)
-    -> decltype(std::declval<typename Rng::key_type>(), void())
 {
-    print(element.first, os);
+    print(element.first, os, depth);
     os << " => ";
-    print(element.second, os);
+    print(element.second, os, depth);
 }
 
 // Element output function for other ranges
-template <typename T, typename Rng>
-auto output_element(std::ostream& os, const T& element, const Rng&, ...)
-    -> void
+template <typename T>
+void output_element(std::ostream& os, const T& element, int depth,
+                    std::false_type)
 {
-    print(element, os);
+    print(element, os, depth);
 }
 
 // Member output function for tuple-like objects
 template <typename Tup, std::size_t... Is>
-void output_tuple_members(std::ostream& os, const Tup& tup,
+void output_tuple_members(std::ostream& os, const Tup& tup, int depth,
                           std::index_sequence<Is...>)
 {
     using std::get;
-    ((os << (Is != 0 ? ", " : ""), print(get<Is>(tup), os)), ...);
+    ((os << (Is != 0 ? ", " : ""), print(get<Is>(tup), os, depth)), ...);
 }
 
 } // namespace detail
@@ -92,7 +133,7 @@ void output_tuple_members(std::ostream& os, const Tup& tup,
 template <typename T>
 struct printer<T, std::enable_if_t<std::is_same_v<T, char> ||
                                    std::is_same_v<T, signed char>>> {
-    void operator()(T ch, std::ostream& os) const
+    void operator()(T ch, std::ostream& os, int /*depth*/) const
     {
         // chars and signed chars are output as characters
         os << '\'' << ch << '\'';
@@ -102,7 +143,7 @@ struct printer<T, std::enable_if_t<std::is_same_v<T, char> ||
 template <typename T>
 struct printer<T, std::enable_if_t<std::is_same_v<T, unsigned char> ||
                                    std::is_same_v<T, std::byte>>> {
-    void operator()(T value, std::ostream& os) const
+    void operator()(T value, std::ostream& os, int /*depth*/) const
     {
         // unsigned chars and bytes are output as unsigned integers
         os << static_cast<unsigned>(value);
@@ -111,7 +152,7 @@ struct printer<T, std::enable_if_t<std::is_same_v<T, unsigned char> ||
 
 template <typename T>
 struct printer<T, std::enable_if_t<is_char_pointer_v<T>>> {
-    void operator()(T ptr, std::ostream& os) const
+    void operator()(T ptr, std::ostream& os, int /*depth*/) const
     {
         // char* etc. are output as strings
         os << '"' << ptr << '"';
@@ -122,7 +163,7 @@ template <typename T>
 struct printer<T, std::enable_if_t<is_range_v<T>>> {
     template <typename U>
     // NOLINTNEXTLINE(cppcoreguidelines-missing-std-forward)
-    void operator()(U&& rng, std::ostream& os) const
+    void operator()(U&& rng, std::ostream& os, int depth) const
     {
         static_assert(std::is_same_v<T, remove_cvref_t<U>>);
 
@@ -135,22 +176,30 @@ struct printer<T, std::enable_if_t<is_range_v<T>>> {
             using std::begin;
             using std::end;
             using element_type = remove_cvref_t<decltype(*begin(rng))>;
+            constexpr bool needs_indent = detail::needs_indent<element_type>();
+            constexpr char sep = needs_indent ? '\n' : ' ';
 
             os << '{';
             auto last = end(rng);
             bool on_first_element = true;
             for (auto it = begin(rng); it != last; ++it) {
-                if (!on_first_element) {
-                    os << ", ";
-                } else {
-                    os << ' ';
+                if (on_first_element) {
                     on_first_element = false;
+                } else {
+                    os << ',';
                 }
-                detail::output_element(os, *it, rng,
-                                       is_pair<element_type>{});
+                os << sep;
+                if constexpr (needs_indent) {
+                    os << detail::indent(depth + 1);
+                }
+                detail::output_element(
+                    os, *it, depth + (needs_indent ? 1 : 0), is_map<T>{});
             }
-            if (!on_first_element) { // Not empty
-                os << ' ';
+            if (!on_first_element) { // range is not empty
+                os << sep;
+                if constexpr (needs_indent) {
+                    os << detail::indent(depth);
+                }
             }
             os << '}';
         }
@@ -158,12 +207,14 @@ struct printer<T, std::enable_if_t<is_range_v<T>>> {
 };
 
 template <typename T>
-struct printer<T, std::enable_if_t<is_tuple_like_v<T> && !is_range_v<T>>> {
-    void operator()(const T& tup, std::ostream& os) const
+struct printer<T, std::enable_if_t<is_tuple_like_v<T> && !is_range_v<T> &&
+                                   !is_reflected_struct_v<T>>> {
+    void operator()(const T& tup, std::ostream& os, int depth) const
     {
         os << '(';
         detail::output_tuple_members(
-            os, tup, std::make_index_sequence<std::tuple_size_v<T>>{});
+            os, tup, depth,
+            std::make_index_sequence<std::tuple_size_v<T>>{});
         os << ')';
     }
 };

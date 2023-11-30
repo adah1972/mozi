@@ -103,15 +103,34 @@ struct is_char_pointer<
 template <typename T>
 inline constexpr bool is_char_pointer_v = is_char_pointer<T>::value;
 
+// Type trait for containers
+template <typename T, typename = void>
+struct is_container : std::false_type {};
+template <typename T>
+struct is_container<T, std::void_t<typename T::value_type>>
+    : std::true_type {};
+template <typename T>
+inline constexpr bool is_container_v = is_container<T>::value;
+
+// Type trait for map-like containers
+template <typename T, typename = void>
+struct is_map : std::false_type {};
+template <typename T>
+struct is_map<
+    T, std::void_t<decltype(std::declval<typename T::key_type&>(),
+                            std::declval<typename T::mapped_type&>(),
+                            std::declval<typename T::value_type&>())>>
+    : std::true_type {};
+template <typename T>
+inline constexpr bool is_map_v = is_map<T>::value;
+
 // Type trait for reflected enums
 template <typename T, typename = void>
 struct is_reflected_enum : std::false_type {};
-
 template <typename T>
 struct is_reflected_enum<T,
                          std::void_t<decltype(is_mozi_reflected_enum(T{}))>>
     : std::true_type {};
-
 template <typename T>
 inline constexpr static bool is_reflected_enum_v =
     is_reflected_enum<T>::value;
@@ -119,11 +138,9 @@ inline constexpr static bool is_reflected_enum_v =
 // Type trait for reflected structs
 template <typename T, typename = void>
 struct is_reflected_struct : std::false_type {};
-
 template <typename T>
 struct is_reflected_struct<T, std::void_t<typename T::is_mozi_reflected>>
     : std::true_type {};
-
 template <typename T>
 inline constexpr static bool is_reflected_struct_v =
     is_reflected_struct<T>::value;
