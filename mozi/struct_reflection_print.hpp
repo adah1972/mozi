@@ -27,7 +27,6 @@
 #include <cstddef>                    // std::size_t
 #include <ostream>                    // std::ostream
 #include <type_traits>                // std::enable_if
-#include "compile_time_string.hpp"    // MOZI_CTS_GET_VALUE
 #include "print.hpp"                  // mozi::printer
 #include "struct_reflection_core.hpp" // mozi::for_each
 #include "type_traits.hpp"            // mozi::remove_cvref/...
@@ -54,8 +53,7 @@ struct printer<T, std::enable_if_t<is_reflected_struct_v<T>>> {
         os <<  "{\n";
         for_each(obj, [size = remove_cvref_t<T>::_size, depth, &os](
                           std::size_t index, auto name, const auto& value) {
-            detail::output_field(value, os, MOZI_CTS_GET_VALUE(name),
-                                 depth + 1);
+            detail::output_field(value, os, name, depth + 1);
             if (index != size - 1) {
                 os << ",\n";
             } else {

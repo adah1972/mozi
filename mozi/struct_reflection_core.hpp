@@ -27,10 +27,10 @@
 
 #include <cstddef>                 // std::size_t
 #include <cstdint>                 // SIZE_MAX
+#include <string_view>             // std::string_view
 #include <type_traits>             // std::decay/enable_if/is_same/...
 #include <utility>                 // std::forward/move/index_sequence/...
 #include "metamacro.h"             // MOZI_GET_ARG_COUNT/MOZI_REPEAT_ON/...
-#include "compile_time_string.hpp" // MOZI_CTS_STRING
 #include "copy.hpp"                // mozi::copier/copy
 #include "type_traits.hpp"         // mozi::is_reflected_struct
 
@@ -71,6 +71,17 @@ constexpr void for_each_impl(T&& obj, F&& f, std::index_sequence<Is...>)
      ...);
 }
 
+template <typename T, typename F, std::size_t... Is>
+constexpr void for_each_carg_name_impl(T&& obj, F&& f,
+                                       std::index_sequence<Is...>)
+{
+    using DT = std::decay_t<T>;
+    (void(std::forward<F>(f)(
+         Is, [] { return DT::template _field<T, Is>::name; },
+         get<Is>(std::forward<T>(obj)))),
+     ...);
+}
+
 template <typename T, typename U, typename F, std::size_t... Is>
 constexpr void zip_impl(T&& obj1, U&& obj2, F&& f,
                         std::index_sequence<Is...>)
@@ -101,6 +112,16 @@ constexpr void for_each(T&& obj, F&& f)
     using DT = std::decay_t<T>;
     detail::for_each_impl(std::forward<T>(obj), std::forward<F>(f),
                           std::make_index_sequence<DT::_size>{});
+}
+
+template <typename T, typename F,
+          std::enable_if_t<is_reflected_struct_v<std::decay_t<T>>, int> = 0>
+constexpr void for_each_carg_name(T&& obj, F&& f)
+{
+    using DT = std::decay_t<T>;
+    detail::for_each_carg_name_impl(std::forward<T>(obj),
+                                    std::forward<F>(f),
+                                    std::make_index_sequence<DT::_size>{});
 }
 
 template <typename T, typename U, typename F,
@@ -139,17 +160,17 @@ struct copier<T, U,
     }
 };
 
-template <typename T, typename Name,
-          std::enable_if_t<is_reflected_struct_v<T>, int> = 0>
-constexpr std::size_t get_index(Name /*name*/)
+template <typename T, std::enable_if_t<is_reflected_struct_v<T>, int> = 0>
+constexpr std::size_t get_index(std::string_view name_to_check)
 {
     auto result = SIZE_MAX;
-    for_each_meta<T>(
-        [&result](std::size_t index, auto name, auto /*type*/) {
-            if constexpr (std::is_same_v<decltype(name), Name>) {
-                result = index;
-            }
-        });
+    for_each_meta<T>([&result, name_to_check](std::size_t index,
+                                              const char* name,
+                                              auto /*type*/) {
+        if (name_to_check == name) {
+            result = index;
+        }
+    });
     return result;
 }
 
@@ -162,7 +183,7 @@ constexpr std::size_t count_missing_fields()
     std::size_t result = 0;
     for_each_meta<U>(
         [&result](std::size_t /*index*/, auto name, auto /*type*/) {
-            if constexpr (get_index<T>(name) == SIZE_MAX) {
+            if (get_index<T>(name) == SIZE_MAX) {
                 ++result;
             }
         });
@@ -178,28 +199,24 @@ constexpr void copy_same_name_fields(T&& src, U& dest) // NOLINT
     constexpr size_t actual_missing_fields =
         count_missing_fields<std::decay_t<T>, std::decay_t<U>>();
     static_assert(size_t(MissingFields) == actual_missing_fields);
-    for_each(dest, [&src](std::size_t /*index*/, auto name, auto& value) {
-        using DT = std::decay_t<T>;
-        constexpr auto index = get_index<DT>(name);
-        if constexpr (index != SIZE_MAX) {
-            copy(get<index>(std::forward<T>(src)), value);
-        }
-    });
+    for_each_carg_name(
+        dest, [&src](std::size_t /*index*/, auto name, auto& value) {
+            using DT = std::decay_t<T>;
+            constexpr auto index = get_index<DT>(name());
+            if constexpr (index != SIZE_MAX) {
+                copy(get<index>(std::forward<T>(src)), value);
+            }
+        });
 }
 
 } // namespace mozi
-
-#if __cplusplus < 202002L && defined(__GNUC__)
-// The literal operator needs to be exposed in this configuration
-using mozi::operator""_cts;
-#endif
 
 #define MOZI_FIELD(i, arg)                                                 \
     MOZI_PAIR(arg);                                                        \
     template <typename T>                                                  \
     struct _field<T, i> {                                                  \
         using type = decltype(std::decay_t<T>::MOZI_STRIP(arg));           \
-        static constexpr auto name = MOZI_CTS_STRING(MOZI_STRIP(arg));     \
+        static constexpr auto name = MOZI_STRING(MOZI_STRIP(arg));     \
         constexpr explicit _field(T&& obj) /* NOLINT */                    \
             : obj_(std::forward<T>(obj))                                   \
         {                                                                  \
