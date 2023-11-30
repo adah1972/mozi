@@ -24,7 +24,7 @@
 #ifndef MOZI_PRINT_HPP
 #define MOZI_PRINT_HPP
 
-#include <cstddef>         // std::size_t/byte
+#include <cstddef>         // std::size_t
 #include <iostream>        // std::cout
 #include <ostream>         // std::ostream
 #include <string>          // std::string
@@ -141,12 +141,21 @@ struct printer<T, std::enable_if_t<std::is_same_v<T, char> ||
 };
 
 template <typename T>
-struct printer<T, std::enable_if_t<std::is_same_v<T, unsigned char> ||
-                                   std::is_same_v<T, std::byte>>> {
+struct printer<T, std::enable_if_t<std::is_same_v<T, unsigned char>>> {
     void operator()(T value, std::ostream& os, int /*depth*/) const
     {
-        // unsigned chars and bytes are output as unsigned integers
+        // unsigned chars are output as unsigned integers
         os << static_cast<unsigned>(value);
+    }
+};
+
+template <typename T>
+struct printer<
+    T, std::enable_if_t<std::is_enum_v<T> && !is_reflected_enum_v<T>>> {
+    void operator()(T value, std::ostream& os, int /*depth*/) const
+    {
+        // enumerators are output as underlying integers
+        os << static_cast<promote_char_t<std::underlying_type_t<T>>>(value);
     }
 };
 

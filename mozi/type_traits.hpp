@@ -44,14 +44,6 @@ auto adl_end(Rng&& rng) -> decltype(end(rng));
 
 } // namespace adl
 
-// C++20 remove_cvref
-template <typename T>
-struct remove_cvref {
-    using type = std::remove_cv_t<std::remove_reference_t<T>>;
-};
-template <typename T>
-using remove_cvref_t = typename remove_cvref<T>::type;
-
 // Type traits for ranges
 template <typename T, typename = void>
 struct is_range : std::false_type {};
@@ -102,6 +94,44 @@ struct is_char_pointer<
     : std::true_type {};
 template <typename T>
 inline constexpr bool is_char_pointer_v = is_char_pointer<T>::value;
+
+// Type trait to promote char types to "normal" int types
+template <typename T, typename = void>
+struct promote_char {
+    using type = T;
+};
+template <typename T>
+struct promote_char<
+    T, std::enable_if_t<is_char_v<T> && std::is_signed_v<T>>> {
+    using type = int;
+};
+template <typename T>
+struct promote_char<
+    T, std::enable_if_t<is_char_v<T> && std::is_unsigned_v<T>>> {
+    using type = unsigned;
+};
+template <typename T>
+using promote_char_t = typename promote_char<T>::type;
+
+// C++20 remove_cvref
+template <typename T>
+struct remove_cvref {
+    using type = std::remove_cv_t<std::remove_reference_t<T>>;
+};
+template <typename T>
+using remove_cvref_t = typename remove_cvref<T>::type;
+
+// C++23 is_scoped_enum
+template <typename T, typename = void>
+struct is_scoped_enum : std::false_type {};
+template <typename T>
+struct is_scoped_enum<
+    T,
+    std::enable_if_t<std::is_enum_v<T> &&
+                     !std::is_convertible_v<T, std::underlying_type_t<T>>>>
+    : std::true_type {};
+template <typename T>
+inline constexpr bool is_scoped_enum_v = is_scoped_enum<T>::value;
 
 // Type trait for containers
 template <typename T, typename = void>

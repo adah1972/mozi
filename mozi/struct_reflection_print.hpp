@@ -24,7 +24,7 @@
 #ifndef MOZI_STRUCT_REFLECTION_PRINT_HPP
 #define MOZI_STRUCT_REFLECTION_PRINT_HPP
 
-#include <cstddef>                    // std::size_t/byte
+#include <cstddef>                    // std::size_t
 #include <ostream>                    // std::ostream
 #include <type_traits>                // std::enable_if
 #include "compile_time_string.hpp"    // MOZI_CTS_GET_VALUE
