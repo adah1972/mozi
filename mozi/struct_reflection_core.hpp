@@ -149,6 +149,7 @@ constexpr std::size_t get_index(Name /*name*/)
             if constexpr (std::is_same_v<decltype(name), Name>) {
                 result = index;
             }
+            (void)index;
         });
     return result;
 }

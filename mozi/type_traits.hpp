@@ -121,14 +121,24 @@ struct remove_cvref {
 template <typename T>
 using remove_cvref_t = typename remove_cvref<T>::type;
 
+// C++20-compatible underlying_type for better SFINAE than some old
+// implementations
+template <typename T, typename = void>
+struct underlying_type {};
+template <typename T>
+struct underlying_type<T, std::enable_if_t<std::is_enum_v<T>>> {
+    using type = std::underlying_type_t<T>;
+};
+template <typename T>
+using underlying_type_t = typename underlying_type<T>::type;
+
 // C++23 is_scoped_enum
 template <typename T, typename = void>
 struct is_scoped_enum : std::false_type {};
 template <typename T>
 struct is_scoped_enum<
-    T,
-    std::enable_if_t<std::is_enum_v<T> &&
-                     !std::is_convertible_v<T, std::underlying_type_t<T>>>>
+    T, std::enable_if_t<std::is_enum_v<T> &&
+                        !std::is_convertible_v<T, underlying_type_t<T>>>>
     : std::true_type {};
 template <typename T>
 inline constexpr bool is_scoped_enum_v = is_scoped_enum<T>::value;

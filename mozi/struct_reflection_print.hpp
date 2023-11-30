@@ -52,7 +52,7 @@ struct printer<T, std::enable_if_t<is_reflected_struct_v<T>>> {
     void operator()(const T& obj, std::ostream& os, int depth) const
     {
         os <<  "{\n";
-        for_each(obj, [size = remove_cvref_t<T>::_size, depth, &os](
+        for_each(obj, [&os, depth, size = remove_cvref_t<T>::_size](
                           std::size_t index, auto name, const auto& value) {
             detail::output_field(value, os, MOZI_CTS_GET_VALUE(name),
                                  depth + 1);
