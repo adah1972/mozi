@@ -21,8 +21,8 @@
  *
  */
 
-#ifndef MOZI_ENUM_REFLECTION_HPP
-#define MOZI_ENUM_REFLECTION_HPP
+#ifndef MOZI_ENUM_REFLECTION_CORE_HPP
+#define MOZI_ENUM_REFLECTION_CORE_HPP
 
 #include <algorithm>   // std::lower_bound/sort/stable_sort/unique
 #include <array>       // IWYU pragma: keep std::array
@@ -290,4 +290,4 @@ constexpr std::underlying_type_t<Enum> to_underlying(Enum e) noexcept
 #define DEFINE_ENUM_CLASS MOZI_DEFINE_ENUM_CLASS
 #endif
 
-#endif // MOZI_ENUM_REFLECTION_HPP
+#endif // MOZI_ENUM_REFLECTION_CORE_HPP
