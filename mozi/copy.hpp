@@ -41,11 +41,20 @@ struct copier {
     }
 };
 
-template <typename T, typename U>
-constexpr void copy(T&& src, U& dest)
-{
-    copier<std::decay_t<T>, std::decay_t<U>>{}(std::forward<T>(src), dest);
-}
+namespace detail {
+
+struct copy_fn {
+    template <typename T, typename U>
+    constexpr void operator()(T&& src, U& dest) const
+    {
+        copier<std::decay_t<T>, std::decay_t<U>>{}(std::forward<T>(src),
+                                                   dest);
+    }
+};
+
+} // namespace detail
+
+inline constexpr detail::copy_fn copy{};
 
 } // namespace mozi
 

@@ -44,11 +44,20 @@ struct printer {
     }
 };
 
-template <typename T>
-void print(T&& obj, std::ostream& os = std::cout, int depth = 0)
-{
-    printer<remove_cvref_t<T>>{}(std::forward<T>(obj), os, depth);
-}
+namespace detail {
+
+struct print_fn {
+    template <typename T>
+    void operator()(T&& obj, std::ostream& os = std::cout,
+                    int depth = 0) const
+    {
+        printer<remove_cvref_t<T>>{}(std::forward<T>(obj), os, depth);
+    }
+};
+
+} // namespace detail
+
+inline constexpr detail::print_fn print{};
 
 template <typename T>
 void println(T&& obj, std::ostream& os = std::cout, int depth = 0)
