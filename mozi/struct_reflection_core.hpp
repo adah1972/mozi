@@ -28,10 +28,9 @@
 #include <cstddef>                 // std::size_t
 #include <cstdint>                 // SIZE_MAX
 #include <type_traits>             // std::decay/enable_if/is_same/...
-#include <utility>                 // std::forward/move/index_sequence/...
+#include <utility>                 // std::forward/index_sequence/...
 #include "metamacro.h"             // MOZI_GET_ARG_COUNT/MOZI_REPEAT_ON/...
 #include "compile_time_string.hpp" // MOZI_CTS_STRING
-#include "copy.hpp"                // mozi::copier/copy
 #include "type_traits.hpp"         // mozi::is_reflected_struct
 
 namespace mozi {
@@ -117,28 +116,6 @@ constexpr void zip(T&& obj1, U&& obj2, F&& f)
                      std::make_index_sequence<DT::_size>{});
 }
 
-template <typename T, typename U>
-struct copier<T, U,
-              std::enable_if_t<is_reflected_struct_v<T> &&
-                               is_reflected_struct_v<U>>> {
-    void operator()(const T& src, U& dest) const
-    {
-        zip(src, dest,
-            [](auto /*name1*/, auto /*name2*/,
-               const auto& value1, auto& value2) {
-                copy(value1, value2);
-            });
-    }
-    void operator()(T&& src, U& dest) const
-    {
-        zip(std::move(src), dest,
-            [](auto /*field_name1*/, auto /*name2*/,
-               auto&& value1, auto& value2) {
-                copy(std::forward<decltype(value1)>(value1), value2);
-            });
-    }
-};
-
 template <typename T, typename Name,
           std::enable_if_t<is_reflected_struct_v<T>, int> = 0>
 constexpr std::size_t get_index(Name /*name*/)
@@ -152,40 +129,6 @@ constexpr std::size_t get_index(Name /*name*/)
             (void)index;
         });
     return result;
-}
-
-template <typename T, typename U,
-          std::enable_if_t<(is_reflected_struct_v<std::decay_t<T>> &&
-                            is_reflected_struct_v<std::decay_t<U>>),
-                           int> = 0>
-constexpr std::size_t count_missing_fields()
-{
-    std::size_t result = 0;
-    for_each_meta<U>(
-        [&result](std::size_t /*index*/, auto name, auto /*type*/) {
-            if constexpr (get_index<T>(name) == SIZE_MAX) {
-                ++result;
-            }
-        });
-    return result;
-}
-
-enum class missing_fields : std::size_t {};
-
-template <missing_fields MissingFields = missing_fields{0},
-          typename T, typename U>
-constexpr void copy_same_name_fields(T&& src, U& dest) // NOLINT
-{
-    constexpr size_t actual_missing_fields =
-        count_missing_fields<std::decay_t<T>, std::decay_t<U>>();
-    static_assert(size_t(MissingFields) == actual_missing_fields);
-    for_each(dest, [&src](std::size_t /*index*/, auto name, auto& value) {
-        using DT = std::decay_t<T>;
-        constexpr auto index = get_index<DT>(name);
-        if constexpr (index != SIZE_MAX) {
-            copy(get<index>(std::forward<T>(src)), value);
-        }
-    });
 }
 
 } // namespace mozi
