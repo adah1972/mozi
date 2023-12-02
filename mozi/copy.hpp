@@ -24,8 +24,8 @@
 #ifndef MOZI_COPIER_HPP
 #define MOZI_COPIER_HPP
 
-#include <type_traits> // std::decay
-#include <utility>     // std::forward/move
+#include <utility>         // std::forward/move
+#include "type_traits.hpp" // mozi::remove_cvref
 
 namespace mozi {
 
@@ -47,8 +47,8 @@ struct copy_fn {
     template <typename T, typename U>
     constexpr void operator()(T&& src, U& dest) const
     {
-        copier<std::decay_t<T>, std::decay_t<U>>{}(std::forward<T>(src),
-                                                   dest);
+        copier<mozi::remove_cvref_t<T>, mozi::remove_cvref_t<U>>{}(
+            std::forward<T>(src), dest);
     }
 };
 
