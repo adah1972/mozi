@@ -45,8 +45,76 @@ reflection for `enum`s and `struct`s is included, as well as macros that
 are necessary in such code generation usage.  More will be coming later.
 
 
-[lnk_mozi]: https://en.wikipedia.org/wiki/Mozi
-[lnk_nvwa]: https://github.com/adah1972/nvwa
+Building the Test
+-----------------
+
+The only thing that requires building is the unit tests.  You need to
+have [CMake][lnk_cmake] and [Catch2][lnk_catch2] v3.
+
+### Prerequisite: CMake
+
+You need to have CMake 3.10 or later.  Standard CMake installation
+should usually do.
+
+### Prerequisite: Catch2 v3
+
+You need to have Catch2 v3, while many Linux distros only come with v2.
+You probably need to follow the standard build and installation
+procedure on such distros:
+
+```
+cd /path/to/Catch2/source
+mkdir build && cd build
+cmake ..
+cmake --build . -j
+sudo make install
+```
+
+I use [Homebrew][lnk_brew] on macOS (`brew install catch2`) and
+[vcpkg][lnk_vcpkg] on Windows (`vcpkg install catch2`).  They have the
+up-to-date Catch2 version.
+
+### Tested compilers
+
+I mainly test with the following compilers:
+
+- GCC 10 and later on Linux
+- Clang 17 and Apple Clang 14 on macOS
+- MSVC as in Visual Studio 2022 on Windows
+
+If you do not use any of these compilers and encounter a problem, you
+had better report the problem with a patch.  I may not be able to verify
+and fix your problem.
+
+### Build and test
+
+The following procedure should normally work:
+
+```
+cd /path/to/mozi/test
+mkdir build && cd build
+cmake ..
+cmake --build . -j && ctest
+```
+
+You should then see the message “100% tests passed”.
+
+#### Note to Windows users
+
+Keep in mind that when using vcpkg you generally need to specify the
+path to it in the third step above, like:
+
+```
+cmake "-DCMAKE_TOOLCHAIN_FILE=/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake" ..
+```
+
+
+[lnk_brew]:   https://brew.sh/
+[lnk_catch2]: https://github.com/catchorg/Catch2
+[lnk_cmake]:  https://cmake.org/
+[lnk_mozi]:   https://en.wikipedia.org/wiki/Mozi
+[lnk_nvwa]:   https://github.com/adah1972/nvwa
+[lnk_vcpkg]:  https://github.com/microsoft/vcpkg
 
 
 <!--
