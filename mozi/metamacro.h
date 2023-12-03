@@ -1,6 +1,4 @@
 /*
- * MIT License
- *
  * Copyright (c) 2021 Netcan
  * Copyright (c) 2021-2023 Wu Yongwei
  *
@@ -42,13 +40,13 @@
 #define MOZI_INTERNAL_ARGS_AUGMENTER(...) unused, __VA_ARGS__
 #define MOZI_INTERNAL_EXPAND_ARGS_PRIVATE(...)                             \
     MOZI_EXPAND(MOZI_INTERNAL_GET_ARG_COUNT_PRIVATE(                       \
-        __VA_ARGS__, 103, 102, 101, 100, 99, 98, 97, 96, 95, 94, 93, 92,   \
-        91, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78, 77, 76,    \
-        75, 74, 73, 72, 71, 70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60,    \
-        59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44,    \
-        43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28,    \
-        27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12,    \
-        11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0))
+        __VA_ARGS__, 102, 101, 100, 99, 98, 97, 96, 95, 94, 93, 92, 91,    \
+        90, 89, 88, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78, 77, 76, 75,    \
+        74, 73, 72, 71, 70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60, 59,    \
+        58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 43,    \
+        42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27,    \
+        26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11,    \
+        10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0))
 
 #define MOZI_REPEAT_0(func, i, arg)
 #define MOZI_REPEAT_1(func, i, arg) \
@@ -251,6 +249,9 @@
     func(i, arg) MOZI_EXPAND(MOZI_REPEAT_98(func, MOZI_INC(i), __VA_ARGS__))
 #define MOZI_REPEAT_100(func, i, arg, ...)                                 \
     func(i, arg) MOZI_EXPAND(MOZI_REPEAT_99(func, MOZI_INC(i), __VA_ARGS__))
+#define MOZI_REPEAT_101(func, i, arg, ...)                                 \
+    func(i, arg)                                                           \
+        MOZI_EXPAND(MOZI_REPEAT_100(func, MOZI_INC(i), __VA_ARGS__))
 
 #define MOZI_REPEAT_FIRST_0(func, i, first, arg)
 #define MOZI_REPEAT_FIRST_1(func, i, first, arg) func(i, first, arg)
@@ -551,6 +552,9 @@
 #define MOZI_REPEAT_FIRST_100(func, i, first, arg, ...)                    \
     func(i, first, arg) MOZI_EXPAND(                                       \
         MOZI_REPEAT_FIRST_99(func, MOZI_INC(i), first, __VA_ARGS__))
+#define MOZI_REPEAT_FIRST_101(func, i, first, arg, ...)                    \
+    func(i, first, arg) MOZI_EXPAND(                                       \
+        MOZI_REPEAT_FIRST_100(func, MOZI_INC(i), first, __VA_ARGS__))
 
 #define MOZI_REPEAT_ON(func, ...)                                          \
     MOZI_EXPAND(MOZI_PASTE(MOZI_REPEAT_, MOZI_GET_ARG_COUNT(__VA_ARGS__))( \
@@ -569,33 +573,33 @@
 #if MOZI_VA_OPT_SUPPORTED // Standardized in C++20
 #define MOZI_GET_ARG_COUNT(...)                                            \
     MOZI_INTERNAL_GET_ARG_COUNT_PRIVATE(                                   \
-        unused __VA_OPT__(, ) __VA_ARGS__, 103, 102, 101, 100, 99, 98, 97, \
-        96, 95, 94, 93, 92, 91, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81,    \
-        80, 79, 78, 77, 76, 75, 74, 73, 72, 71, 70, 69, 68, 67, 66, 65,    \
-        64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49,    \
-        48, 47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33,    \
-        32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17,    \
-        16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
+        unused __VA_OPT__(, ) __VA_ARGS__, 102, 101, 100, 99, 98, 97, 96,  \
+        95, 94, 93, 92, 91, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81, 80,    \
+        79, 78, 77, 76, 75, 74, 73, 72, 71, 70, 69, 68, 67, 66, 65, 64,    \
+        63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48,    \
+        47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32,    \
+        31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16,    \
+        15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
 #elif defined(__GNUC__) // Extension in GCC/Clang
 #define MOZI_GET_ARG_COUNT(...)                                            \
     MOZI_INTERNAL_GET_ARG_COUNT_PRIVATE(                                   \
-        unused, ##__VA_ARGS__, 103, 102, 101, 100, 99, 98, 97, 96, 95, 94, \
-        93, 92, 91, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78,    \
-        77, 76, 75, 74, 73, 72, 71, 70, 69, 68, 67, 66, 65, 64, 63, 62,    \
-        61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46,    \
-        45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30,    \
-        29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14,    \
-        13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
+        unused, ##__VA_ARGS__, 102, 101, 100, 99, 98, 97, 96, 95, 94, 93,  \
+        92, 91, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78, 77,    \
+        76, 75, 74, 73, 72, 71, 70, 69, 68, 67, 66, 65, 64, 63, 62, 61,    \
+        60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45,    \
+        44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29,    \
+        28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13,    \
+        12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
 #else // MOZI_GET_ARG_COUNT() may return 1 here
 #define MOZI_GET_ARG_COUNT(...)                                            \
     MOZI_INTERNAL_GET_ARG_COUNT_PRIVATE(                                   \
-        unused, __VA_ARGS__, 103, 102, 101, 100, 99, 98, 97, 96, 95, 94,   \
-        93, 92, 91, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78,    \
-        77, 76, 75, 74, 73, 72, 71, 70, 69, 68, 67, 66, 65, 64, 63, 62,    \
-        61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46,    \
-        45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30,    \
-        29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14,    \
-        13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
+        unused, __VA_ARGS__, 102, 101, 100, 99, 98, 97, 96, 95, 94, 93,    \
+        92, 91, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78, 77,    \
+        76, 75, 74, 73, 72, 71, 70, 69, 68, 67, 66, 65, 64, 63, 62, 61,    \
+        60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45,    \
+        44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29,    \
+        28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13,    \
+        12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
 #endif
 
 #define MOZI_REPEAT_0(func, i, arg)
@@ -799,6 +803,7 @@
     func(i, arg) MOZI_REPEAT_98(func, MOZI_INC(i), __VA_ARGS__)
 #define MOZI_REPEAT_100(func, i, arg, ...)                                 \
     func(i, arg) MOZI_REPEAT_99(func, MOZI_INC(i), __VA_ARGS__)
+#define MOZI_REPEAT_101(func, i, arg, ...) func(i, arg) _overflow
 
 #define MOZI_REPEAT_FIRST_0(func, i, first, arg)
 #define MOZI_REPEAT_FIRST_1(func, i, first, arg) func(i, first, arg)
@@ -1099,6 +1104,7 @@
 #define MOZI_REPEAT_FIRST_100(func, i, first, arg, ...)                    \
     func(i, first, arg)                                                    \
         MOZI_REPEAT_FIRST_99(func, MOZI_INC(i), first, __VA_ARGS__)
+#define MOZI_REPEAT_FIRST_101(func, i, first, arg, ...) _overflow
 
 #define MOZI_REPEAT_ON(func, ...)                                          \
     MOZI_PASTE(MOZI_REPEAT_, MOZI_GET_ARG_COUNT(__VA_ARGS__))              \
@@ -1223,7 +1229,7 @@
     e58, e59, e60, e61, e62, e63, e64, e65, e66, e67, e68, e69, e70, e71,  \
     e72, e73, e74, e75, e76, e77, e78, e79, e80, e81, e82, e83, e84, e85,  \
     e86, e87, e88, e89, e90, e91, e92, e93, e94, e95, e96, e97, e98, e99,  \
-    e100, e101, e102, e103, count, ...)                                    \
+    e100, e101, e102, count, ...)                                          \
     count
 
 #define MOZI_CONCAT(x, y) x##y
