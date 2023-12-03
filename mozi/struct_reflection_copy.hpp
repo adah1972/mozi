@@ -26,6 +26,7 @@
 
 #include <cstddef>                    // std::size_t
 #include <cstdint>                    // SIZE_MAX
+#include <tuple>                      // std::tuple
 #include <type_traits>                // std::enable_if
 #include <utility>                    // std::forward/move
 #include "copy.hpp"                   // mozi::copier/copy
@@ -33,6 +34,19 @@
 #include "type_traits.hpp"            // mozi::is_reflected_struct
 
 namespace mozi {
+
+namespace detail {
+
+template <typename T, typename U, std::size_t... Is>
+constexpr void copy_tuple_like_impl(T&& src, U& dest,
+                                    std::index_sequence<Is...>)
+{
+    using mozi::get;
+    using std::get;
+    (copy(get<Is>(std::forward<T>(src)), get<Is>(dest)), ...);
+}
+
+} // namespace detail
 
 template <typename T, typename U>
 struct copier<T, U,
@@ -53,6 +67,44 @@ struct copier<T, U,
                auto&& value1, auto& value2) {
                 copy(std::forward<decltype(value1)>(value1), value2);
             });
+    }
+};
+
+template <typename T, typename... Args>
+struct copier<T, std::tuple<Args...>,
+              std::enable_if_t<is_reflected_struct_v<T>>> {
+    void operator()(const T& src, std::tuple<Args...>& dest) const
+    {
+        using DT = std::decay_t<T>;
+        static_assert(sizeof...(Args) == DT::_size);
+        detail::copy_tuple_like_impl(src, dest,
+                                     std::make_index_sequence<DT::_size>{});
+    }
+    void operator()(T&& src, std::tuple<Args...>& dest) const
+    {
+        using DT = std::decay_t<T>;
+        static_assert(sizeof...(Args) == DT::_size);
+        detail::copy_tuple_like_impl(std::move(src), dest,
+                                     std::make_index_sequence<DT::_size>{});
+    }
+};
+
+template <typename T, typename... Args>
+struct copier<std::tuple<Args...>, T,
+              std::enable_if_t<is_reflected_struct_v<T>>> {
+    void operator()(const std::tuple<Args...>& src, T& dest) const
+    {
+        using DT = std::decay_t<T>;
+        static_assert(sizeof...(Args) == DT::_size);
+        detail::copy_tuple_like_impl(src, dest,
+                                     std::make_index_sequence<DT::_size>{});
+    }
+    void operator()(std::tuple<Args...>&& src, T& dest) const
+    {
+        using DT = std::decay_t<T>;
+        static_assert(sizeof...(Args) == DT::_size);
+        detail::copy_tuple_like_impl(std::move(src), dest,
+                                     std::make_index_sequence<DT::_size>{});
     }
 };
 

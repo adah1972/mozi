@@ -6,10 +6,28 @@
 #include <string>                       // std::string
 #include <tuple>                        // std::tuple
 #include <type_traits>                  // std::decay/is_integral
+#include <utility>                      // std::move
 #include <vector>                       // std::vector
 #include <stdint.h>                     // uint16_t/uint32_t
 #include <catch2/catch_test_macros.hpp> // Catch2 test macros
+#include "mozi/copy.hpp"                // mozi::copy
 #include "mozi/print.hpp"               // mozi::print/println
+
+#if __has_include(<boost/pfr.hpp>)
+#include <boost/pfr/core.hpp>           // boost::pfr::structure_tie
+
+namespace {
+
+struct NormalStruct {
+    uint16_t v1;
+    uint16_t v2;
+    uint32_t v3;
+    uint32_t v4;
+    std::string msg;
+};
+
+} // unnamed namespace
+#endif
 
 namespace data {
 
@@ -175,4 +193,53 @@ TEST_CASE("struct_reflection: print")
                            "    }\n"
                            "}\n");
     }
+}
+
+TEST_CASE("struct_reflection: copy to/from tuple")
+{
+    data::S1 s1{1, 2, 3, 4, "a long string that defeats SSO"};
+
+    SECTION("normal tuple")
+    {
+        std::tuple<uint16_t, uint16_t, uint16_t, uint16_t, std::string> tup;
+        mozi::copy(s1, tup);
+        CHECK(s1.v1 == std::get<0>(tup));
+        CHECK(s1.v2 == std::get<1>(tup));
+        CHECK(s1.v3 == std::get<2>(tup));
+        CHECK(s1.v4 == std::get<3>(tup));
+        CHECK(s1.msg == std::get<4>(tup));
+
+        s1 = {};
+        REQUIRE(s1.v1 != std::get<0>(tup));
+        mozi::copy(std::move(tup), s1);
+        CHECK(s1.v1 == std::get<0>(tup));
+        CHECK(s1.v2 == std::get<1>(tup));
+        CHECK_FALSE(s1.msg.empty());
+        CHECK(std::get<4>(tup).empty());
+    }
+
+#if __has_include(<boost/pfr.hpp>)
+    SECTION("Boost.PFR")
+    {
+        NormalStruct s2{};
+
+        auto target = boost::pfr::structure_tie(s2);
+        // Using a (tuple) variable is necessary as the copy target
+        mozi::copy(std::move(s1), target);
+        CHECK(s1.v1 == s2.v1);
+        CHECK(s1.v2 == s2.v2);
+        CHECK(s1.v3 == s2.v3);
+        CHECK(s1.v4 == s2.v4);
+        CHECK(s1.msg.empty());
+        CHECK_FALSE(s2.msg.empty());
+
+        s1 = {};
+        REQUIRE(s1.v1 != s2.v1);
+        // N.B.: structure_tie does not work on rvalues
+        mozi::copy(boost::pfr::structure_tie(s2), s1);
+        CHECK(s1.v1 == s2.v1);
+        CHECK(s1.v2 == s2.v2);
+        CHECK(s1.msg == s2.msg);
+    }
+#endif
 }
