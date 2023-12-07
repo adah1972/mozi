@@ -34,6 +34,10 @@
 #include <utility>         // std::forward/pair/index_sequence/...
 #include "type_traits.hpp" // miscellaneous type traits
 
+#if MOZI_PRINT_USE_FMTLIB
+#include <fmt/format.h>
+#endif
+
 namespace mozi {
 
 template <typename T, typename = void>
@@ -177,7 +181,11 @@ struct printer<T, std::enable_if_t<std::is_same_v<T, char> ||
     void operator()(T ch, std::ostream& os, int /*depth*/) const
     {
         // chars and signed chars are output as characters
+#if MOZI_PRINT_USE_FMTLIB
+        os << fmt::format("{:?}", ch);
+#else
         os << '\'' << ch << '\'';
+#endif
     }
 };
 
@@ -205,7 +213,11 @@ struct printer<T, std::enable_if_t<is_char_pointer_v<T>>> {
     void operator()(T ptr, std::ostream& os, int /*depth*/) const
     {
         // char* etc. are output as strings
+#if MOZI_PRINT_USE_FMTLIB
+        os << fmt::format("{:?}", ptr);
+#else
         os << '"' << ptr << '"';
+#endif
     }
 };
 
@@ -221,7 +233,11 @@ struct printer<T, std::enable_if_t<is_range_v<T>>> {
                       std::is_same_v<T, std::string_view> ||
                       is_char_pointer_v<std::decay_t<T>>) {
             // string, string_view, and string literals
+#if MOZI_PRINT_USE_FMTLIB
+            os << fmt::format("{:?}", rng);
+#else
             os << '"' << rng << '"';
+#endif
         } else {
             using std::begin;
             using std::end;
