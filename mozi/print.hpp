@@ -68,6 +68,38 @@ void println(T&& obj, std::ostream& os = std::cout, int depth = 0)
 
 namespace detail {
 
+template <typename T>
+void output_normal(T&& obj, std::ostream& os)
+{
+    // The main different between output_normal and print is how they
+    // treat characters and strings at the outermost level
+    using DT = std::decay_t<T>;
+    if constexpr (is_char_v<DT> || is_char_pointer_v<DT> ||
+                  std::is_same_v<DT, std::string> ||
+                  std::is_same_v<DT, std::string_view>) {
+        os << obj;
+    } else {
+        print(std::forward<T>(obj), os);
+    }
+}
+
+} // namespace detail
+
+template <typename... Args>
+void output(std::ostream& os, Args&&... args)
+{
+    (detail::output_normal(std::forward<Args>(args), os), ...);
+}
+
+template <typename... Args>
+void outputln(std::ostream& os, Args&&... args)
+{
+    (detail::output_normal(std::forward<Args>(args), os), ...);
+    os << '\n';
+}
+
+namespace detail {
+
 // Stream manipulator for indentation
 class indent {
 public:
