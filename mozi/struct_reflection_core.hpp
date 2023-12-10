@@ -35,6 +35,11 @@
 
 namespace mozi {
 
+template <typename T>
+struct type_t {
+    using type = T;
+};
+
 template <std::size_t I, typename T,
           std::enable_if_t<is_reflected_struct_v<std::decay_t<T>>, int> = 0>
 constexpr decltype(auto) get(T&& obj)
@@ -46,18 +51,13 @@ constexpr decltype(auto) get(T&& obj)
 
 namespace detail {
 
-template <typename T>
-struct type_wrapper {
-    using type = T;
-};
-
 template <typename T, typename F, std::size_t... Is>
 constexpr void for_each_meta_impl(F&& f, std::index_sequence<Is...>)
 {
     using DT = std::decay_t<T>;
     (void(std::forward<F>(f)(
          Is, DT::template _field<T, Is>::name,
-         type_wrapper<typename DT::template _field<T, Is>::type>{})),
+         type_t<typename DT::template _field<T, Is>::type>{})),
      ...);
 }
 
