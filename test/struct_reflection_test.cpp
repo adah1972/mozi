@@ -90,7 +90,7 @@ template <typename T>
 constexpr long add_all_fields(const T& obj)
 {
     long result{};
-    mozi::for_each(obj, [&](std::size_t /*index*/, auto /*name*/,
+    mozi::for_each(obj, [&](auto /*index*/, auto /*name*/,
                             const auto& value) {
         if constexpr (std::is_integral_v<std::decay_t<decltype(value)>>) {
             result += value;

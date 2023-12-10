@@ -35,6 +35,9 @@
 
 namespace mozi {
 
+template <std::size_t N>
+using index_t = std::integral_constant<std::size_t, N>;
+
 template <typename T>
 struct type_t {
     using type = T;
@@ -56,7 +59,7 @@ constexpr void for_each_meta_impl(F&& f, std::index_sequence<Is...>)
 {
     using DT = std::decay_t<T>;
     (void(std::forward<F>(f)(
-         Is, DT::template _field<T, Is>::name,
+         index_t<Is>{}, DT::template _field<T, Is>::name,
          type_t<typename DT::template _field<T, Is>::type>{})),
      ...);
 }
@@ -65,7 +68,8 @@ template <typename T, typename F, std::size_t... Is>
 constexpr void for_each_impl(T&& obj, F&& f, std::index_sequence<Is...>)
 {
     using DT = std::decay_t<T>;
-    (void(std::forward<F>(f)(Is, DT::template _field<T, Is>::name,
+    (void(std::forward<F>(f)(index_t<Is>{},
+                             DT::template _field<T, Is>::name,
                              get<Is>(std::forward<T>(obj)))),
      ...);
 }
@@ -121,13 +125,12 @@ template <typename T, typename Name,
 constexpr std::size_t get_index(Name /*name*/)
 {
     auto result = SIZE_MAX;
-    for_each_meta<T>(
-        [&result](std::size_t index, auto name, auto /*type*/) {
-            if constexpr (std::is_same_v<decltype(name), Name>) {
-                result = index;
-            }
-            (void)index;
-        });
+    for_each_meta<T>([&result](auto index, auto name, auto /*type*/) {
+        if constexpr (std::is_same_v<decltype(name), Name>) {
+            result = index;
+        }
+        (void)index;
+    });
     return result;
 }
 

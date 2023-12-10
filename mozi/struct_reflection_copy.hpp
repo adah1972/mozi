@@ -115,12 +115,11 @@ template <typename T, typename U,
 constexpr std::size_t count_missing_fields()
 {
     std::size_t result = 0;
-    for_each_meta<U>(
-        [&result](std::size_t /*index*/, auto name, auto /*type*/) {
-            if constexpr (get_index<T>(name) == SIZE_MAX) {
-                ++result;
-            }
-        });
+    for_each_meta<U>([&result](auto /*index*/, auto name, auto /*type*/) {
+        if constexpr (get_index<T>(name) == SIZE_MAX) {
+            ++result;
+        }
+    });
     return result;
 }
 
@@ -133,7 +132,7 @@ constexpr void copy_same_name_fields(T&& src, U& dest) // NOLINT
     constexpr size_t actual_missing_fields =
         count_missing_fields<std::decay_t<T>, std::decay_t<U>>();
     static_assert(size_t(MissingFields) == actual_missing_fields);
-    for_each(dest, [&src](std::size_t /*index*/, auto name, auto& value) {
+    for_each(dest, [&src](auto /*index*/, auto name, auto& value) {
         using DT = std::decay_t<T>;
         constexpr auto index = get_index<DT>(name);
         if constexpr (index != SIZE_MAX) {

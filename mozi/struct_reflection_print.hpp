@@ -24,7 +24,6 @@
 #ifndef MOZI_STRUCT_REFLECTION_PRINT_HPP
 #define MOZI_STRUCT_REFLECTION_PRINT_HPP
 
-#include <cstddef>                    // std::size_t
 #include <ostream>                    // std::ostream
 #include <type_traits>                // std::enable_if
 #include "compile_time_string.hpp"    // MOZI_CTS_GET_VALUE
@@ -52,11 +51,11 @@ struct printer<T, std::enable_if_t<is_reflected_struct_v<T>>> {
     void operator()(const T& obj, std::ostream& os, int depth) const
     {
         os <<  "{\n";
-        for_each(obj, [&os, depth, size = remove_cvref_t<T>::_size](
-                          std::size_t index, auto name, const auto& value) {
+        for_each(obj, [&os, depth](auto index, auto name,
+                                   const auto& value) {
             detail::output_field(value, os, MOZI_CTS_GET_VALUE(name),
                                  depth + 1);
-            if (index != size - 1) {
+            if constexpr (index != remove_cvref_t<T>::_size - 1) {
                 os << ",\n";
             } else {
                 os << '\n';
