@@ -45,15 +45,19 @@ reflection for `enum`s and `struct`s is included, as well as macros that
 are necessary in such code generation usage.  More will be coming later.
 
 
-Building the Test
------------------
+Test Code
+---------
 
-The only thing that requires building is the unit tests.  You need to
-have [CMake][lnk_cmake] and [Catch2][lnk_catch2] v3.
+The test code serves the purpose of both *verifying* and *demonstrating*
+the functionalities of Mozi.  It is the only thing that requires
+building.
+
+In order to build the test, you need to have [CMake][lnk_cmake] and
+[Catch2][lnk_catch2] v3.
 
 ### Prerequisite: CMake
 
-You need to have CMake 3.10 or later.  Standard CMake installation
+You need to have CMake 3.10 or later.  Standard CMake installations
 should usually do.
 
 ### Prerequisite: Catch2 v3
