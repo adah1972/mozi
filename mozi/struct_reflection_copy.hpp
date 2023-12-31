@@ -52,7 +52,7 @@ template <typename T, typename U>
 struct copier<T, U,
               std::enable_if_t<is_reflected_struct_v<T> &&
                                is_reflected_struct_v<U>>> {
-    void operator()(const T& src, U& dest) const
+    constexpr void operator()(const T& src, U& dest) const
     {
         zip(src, dest,
             [](auto /*name1*/, auto /*name2*/,
@@ -60,7 +60,7 @@ struct copier<T, U,
                 copy(value1, value2);
             });
     }
-    void operator()(T&& src, U& dest) const
+    constexpr void operator()(T&& src, U& dest) const
     {
         zip(std::move(src), dest,
             [](auto /*name1*/, auto /*name2*/,
@@ -73,14 +73,14 @@ struct copier<T, U,
 template <typename T, typename... Args>
 struct copier<T, std::tuple<Args...>,
               std::enable_if_t<is_reflected_struct_v<T>>> {
-    void operator()(const T& src, std::tuple<Args...>& dest) const
+    constexpr void operator()(const T& src, std::tuple<Args...>& dest) const
     {
         using DT = std::decay_t<T>;
         static_assert(sizeof...(Args) == DT::_size);
         detail::copy_tuple_like_impl(src, dest,
                                      std::make_index_sequence<DT::_size>{});
     }
-    void operator()(T&& src, std::tuple<Args...>& dest) const
+    constexpr void operator()(T&& src, std::tuple<Args...>& dest) const
     {
         using DT = std::decay_t<T>;
         static_assert(sizeof...(Args) == DT::_size);
@@ -92,14 +92,14 @@ struct copier<T, std::tuple<Args...>,
 template <typename T, typename... Args>
 struct copier<std::tuple<Args...>, T,
               std::enable_if_t<is_reflected_struct_v<T>>> {
-    void operator()(const std::tuple<Args...>& src, T& dest) const
+    constexpr void operator()(const std::tuple<Args...>& src, T& dest) const
     {
         using DT = std::decay_t<T>;
         static_assert(sizeof...(Args) == DT::_size);
         detail::copy_tuple_like_impl(src, dest,
                                      std::make_index_sequence<DT::_size>{});
     }
-    void operator()(std::tuple<Args...>&& src, T& dest) const
+    constexpr void operator()(std::tuple<Args...>&& src, T& dest) const
     {
         using DT = std::decay_t<T>;
         static_assert(sizeof...(Args) == DT::_size);
