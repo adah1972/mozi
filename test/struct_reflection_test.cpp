@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Wu Yongwei
+ * Copyright (c) 2023-2024 Wu Yongwei
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -22,7 +22,6 @@
  */
 
 #include "mozi/struct_reflection.hpp"   // DEFINE_STRUCT
-#include <cstddef>                      // std::size_t
 #include <ios>                          // std::boolalpha
 #include <map>                          // std::map
 #include <sstream>                      // std::ostringstream

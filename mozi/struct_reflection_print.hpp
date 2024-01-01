@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Wu Yongwei
+ * Copyright (c) 2023-2024 Wu Yongwei
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,7 +27,7 @@
 #include <ostream>                    // std::ostream
 #include <type_traits>                // std::enable_if
 #include "compile_time_string.hpp"    // MOZI_CTS_GET_VALUE
-#include "print.hpp"                  // mozi::printer
+#include "print.hpp"                  // mozi::printer/print
 #include "struct_reflection_core.hpp" // mozi::for_each
 #include "type_traits.hpp"            // mozi::remove_cvref/...
 

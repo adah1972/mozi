@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Wu Yongwei
+ * Copyright (c) 2023-2024 Wu Yongwei
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -21,7 +21,7 @@
  *
  */
 
-#include "mozi/print.hpp"               // mozi/print/println
+#include "mozi/print.hpp"               // mozi::print/println
 #include <array>                        // std::array
 #include <cstddef>                      // std::byte
 #include <cstdint>                      // std::uint8_t
