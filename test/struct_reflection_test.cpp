@@ -33,6 +33,7 @@
 #include <stdint.h>                     // uint16_t/uint32_t
 #include <catch2/catch_test_macros.hpp> // Catch2 test macros
 #include "mozi/copy.hpp"                // mozi::copy
+#include "mozi/equal.hpp"               // mozi::equal
 #include "mozi/print.hpp"               // mozi::print/println
 
 #if __has_include(<boost/pfr.hpp>)
@@ -75,6 +76,19 @@ DEFINE_STRUCT(               //
     S3,                      //
     (std::vector<S2>)values, //
     (std::string)msg         //
+);
+
+DEFINE_STRUCT( //
+    S4,        //
+    (int)v2,   //
+    (int)v4,  //
+    (bool)flag //
+);
+
+DEFINE_STRUCT( //
+    S5,        //
+    (int)v2,   //
+    (long)v4   //
 );
 
 } // namespace data
@@ -264,4 +278,36 @@ TEST_CASE("struct_reflection: copy to/from tuple")
         CHECK(s1.msg == s2.msg);
     }
 #endif
+}
+
+TEST_CASE("struct_reflection: equal")
+{
+    SECTION("homogeneous")
+    {
+        using S = data::S1;
+        S s1{1, 2, 3, 4, "Hello"};
+        S s2{1, 2, 3, 4, "Hello"};
+        S s3{1, 2, 3, 4, ""};
+        S s4{1, 2, 3, 0, "Hello"};
+        CHECK(mozi::equal(s1, s2));
+        CHECK_FALSE(mozi::equal(s1, s3));
+        CHECK_FALSE(mozi::equal(s1, s4));
+    }
+
+    SECTION("heterogeneous")
+    {
+        // Reflected structs of different sizes are never equal
+        constexpr data::S2 s2{};
+        constexpr data::S5 s5{};
+        constexpr bool result = mozi::equal(s2, s5);
+        CHECK_FALSE(result);
+
+        // Reflected structs of the same size may be equal
+        data::S2 s21{1, 2, true};
+        data::S4 s41{1, 2, true};
+        data::S4 s42{1, 2, false};
+        CHECK(mozi::equal(s21, s41));
+        CHECK_FALSE(mozi::equal(s2, s21));
+        CHECK_FALSE(mozi::equal(s21, s42));
+    }
 }

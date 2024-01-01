@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Wu Yongwei
+ * Copyright (c) 2024 Wu Yongwei
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -21,12 +21,27 @@
  *
  */
 
-#ifndef MOZI_STRUCT_REFLECTION_HPP
-#define MOZI_STRUCT_REFLECTION_HPP
+#include "mozi/equal.hpp"               // mozi::equal
+#include <string_view>                  // std::string_view
+#include <vector>                       // std::vector
+#include <catch2/catch_test_macros.hpp> // Catch2 test macros
 
-#include "struct_reflection_core.hpp"  // IWYU pragma: export
-#include "struct_reflection_copy.hpp"  // IWYU pragma: export
-#include "struct_reflection_equal.hpp" // IWYU pragma: export
-#include "struct_reflection_print.hpp" // IWYU pragma: export
+TEST_CASE("equal")
+{
+    SECTION("standard types")
+    {
+        long l = 42;
+        CHECK(mozi::equal(l, 42));
 
-#endif // MOZI_STRUCT_REFLECTION_HPP
+        std::string_view sv{"hello"};
+        CHECK(mozi::equal(sv, "hello"));
+        CHECK_FALSE(mozi::equal(sv, "Hell"));
+
+        std::vector v1{1, 2, 3};
+        std::vector v2 = v1;
+        std::vector v3 = v1;
+        v3[0] = 0;
+        CHECK(mozi::equal(v1, v2));
+        CHECK_FALSE(mozi::equal(v1, v3));
+    }
+}

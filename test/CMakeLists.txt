@@ -29,6 +29,7 @@ include_directories(..)
 add_executable(mozi_test
   enum_reflection_test.cpp
   struct_reflection_test.cpp
+  equal_test.cpp
   print_test.cpp
 )
 target_link_libraries(mozi_test PRIVATE Catch2::Catch2WithMain)
