@@ -31,6 +31,7 @@ add_executable(mozi_test
   struct_reflection_test.cpp
   equal_test.cpp
   print_test.cpp
+  serialization_test.cpp
 )
 target_link_libraries(mozi_test PRIVATE Catch2::Catch2WithMain)
 

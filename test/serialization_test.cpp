@@ -1,0 +1,180 @@
+/*
+ * Copyright (c) 2024 Wu Yongwei
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+ * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+ * USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
+
+#include "mozi/serialization.hpp"       // mozi::serialize/deserialize/...
+#include <array>                        // std::array/begin/end
+#include <cstddef>                      // std::size_t/byte
+#include <cstdint>                      // std::uint8_t/uint16_t/uint32_t
+#include <cstring>                      // std::memcpy
+#include <type_traits>                  // std::is_standard_layout/...
+#include <catch2/catch_test_macros.hpp> // Catch2 test macros
+#include "mozi/equal.hpp"               // mozi::equal
+#include "mozi/net_pack.hpp"            // mozi::net_pack::serializer/...
+#include "mozi/span.hpp"                // mozi::span
+#include "mozi/struct_reflection.hpp"   // DEFINE_STRUCT
+
+using mozi::deserialize_result;
+
+namespace {
+
+template <typename T, std::size_t N>
+auto make_byte_span(const T (&a)[N])
+{
+    return mozi::span(
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        reinterpret_cast<const std::byte*>(std::begin(a)),
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        reinterpret_cast<const std::byte*>(std::end(a)));
+}
+
+using char_array_8 = char[8];
+
+DEFINE_STRUCT(        //
+    S1,               //
+    (int)v1,          //
+    (short)v2,        //
+    (char_array_8)v3, //
+    (bool)flag        //
+);
+
+DEFINE_STRUCT(               //
+    S2,                      //
+    (int)v1,                 //
+    (short)v2,               //
+    (std::array<char, 8>)v3, //
+    (float)v4,               //
+    (bool)flag               //
+);
+
+template <typename T, typename = void>
+struct naive_serializer {
+    static_assert(std::is_standard_layout_v<T> &&
+                  std::is_trivially_copyable_v<T>);
+
+    template <typename SerializerList>
+    static void serialize(const T& value, mozi::serialize_t& dest,
+                          SerializerList /*unused*/)
+    {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
+        std::array<std::byte, sizeof(T)> buffer;
+        std::memcpy(buffer.data(), &value, sizeof(T));
+        dest.insert(dest.end(), buffer.begin(), buffer.end());
+    }
+
+    template <typename SerializerList>
+    static deserialize_result deserialize(T& value,
+                                          mozi::deserialize_t& src,
+                                          SerializerList /*unused*/)
+    {
+        if (src.size() < sizeof(T)) {
+            return deserialize_result::input_truncated;
+        }
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
+        std::array<std::byte, sizeof(T)> buffer;
+        for (std::size_t i = 0; i < sizeof(T); ++i) {
+            buffer[i] = src[i];
+        }
+        src = src.subspan(sizeof(T));
+        std::memcpy(&value, buffer.data(), sizeof(T));
+        return deserialize_result::success;
+    }
+};
+
+} // unnamed namespace
+
+TEST_CASE("serialization: net_pack")
+{
+    using mozi::net_pack::serialize;
+    using mozi::net_pack::deserialize;
+
+    SECTION("basic types")
+    {
+        std::uint8_t value1{0x08};
+        const std::uint16_t value2{0x1234};
+        volatile std::uint32_t value3{0x12345678};
+        mozi::serialize_t result;
+        serialize(value1, result);
+        serialize(value2, result);
+        serialize(value3, result);
+        serialize(true, result);
+        serialize(false, result);
+        serialize(std::byte(0xFF), result);
+
+        std::uint8_t expected_result[]{0x08, 0x12, 0x34, 0x12, 0x34,
+                                       0x56, 0x78, 0x01, 0x00, 0xFF};
+        CHECK(mozi::equal(mozi::span(result),
+                          make_byte_span(expected_result)));
+
+        std::uint8_t value4{};
+        std::uint16_t value5{};
+        std::uint32_t value6{};
+        mozi::deserialize_t input{result};
+        auto ec = deserialize(value4, input);
+        REQUIRE(ec == deserialize_result::success);
+        CHECK(value1 == value4);
+        ec = deserialize(value5, input);
+        REQUIRE(ec == deserialize_result::success);
+        CHECK(value2 == value5);
+        ec = deserialize(value6, input);
+        REQUIRE(ec == deserialize_result::success);
+        CHECK(value3 == value6);
+        ec = deserialize(value6, input);
+        CHECK(ec == deserialize_result::input_truncated);
+    }
+
+    SECTION("complex types")
+    {
+        S1 data{1, 2, {'H', 'e', 'l', 'l', 'o'}, true};
+        auto result = serialize(data);
+        std::uint8_t expected_result[]{0x00, 0x00, 0x00, 0x01, 0x00,
+                                       0x02, 'H',  'e',  'l',  'l',
+                                       'o',  0,    0,    0,    0x01};
+        CHECK(mozi::equal(mozi::span(result),
+                          make_byte_span(expected_result)));
+
+        mozi::deserialize_t input{result};
+        S1 data2{};
+        auto ec = deserialize(data2, input);
+        REQUIRE(ec == deserialize_result::success);
+        CHECK(input.empty());
+        CHECK(mozi::equal(data, data2));
+    }
+}
+
+TEST_CASE("serialization: multiple serializers")
+{
+    // Serialization for floats will fall back to naive_serializer
+    mozi::serializer_list<mozi::net_pack::serializer, naive_serializer>
+        serializers;
+
+    S2 data{1, 2, {'H', 'e', 'l', 'l', 'o'}, 1.5, false};
+    mozi::serialize_t result;
+    // WON'T COMPILE: mozi::net_pack::serialize(data, result);
+    mozi::serialize(data, result, serializers);
+    mozi::deserialize_t input{result};
+    S2 data2{};
+    auto ec = mozi::deserialize(data2, input, serializers);
+    REQUIRE(ec == deserialize_result::success);
+    CHECK(input.empty());
+    CHECK(mozi::equal(data, data2));
+}

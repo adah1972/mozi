@@ -41,8 +41,11 @@ Contents
 --------
 
 Mozi is supposed to evolve over time.  Initially, manual static
-reflection for `enum`s and `struct`s is included, as well as macros that
-are necessary in such code generation usage.  More will be coming later.
+reflection for `enum`s and `struct`s was included, as well as macros
+that were necessary in such code generation usage.  Support facilities
+were then added, like equality comparison and serialization.
+
+More may come later.
 
 
 Test Code
