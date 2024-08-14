@@ -22,6 +22,7 @@
  */
 
 #include "mozi/equal.hpp"               // mozi::equal
+#include <array>                        // std::array
 #include <string_view>                  // std::string_view
 #include <vector>                       // std::vector
 #include <catch2/catch_test_macros.hpp> // Catch2 test macros
@@ -43,5 +44,20 @@ TEST_CASE("equal")
         v3[0] = 0;
         CHECK(mozi::equal(v1, v2));
         CHECK_FALSE(mozi::equal(v1, v3));
+    }
+
+    SECTION("arrays")
+    {
+        int a1[]{1, 2, 3};
+        int a2[]{1, 2, 3};
+        CHECK(mozi::equal(a1, a2));
+        a1[0] = 0;
+        CHECK_FALSE(mozi::equal(a1, a2));
+
+        std::array<int, 3> a3{1, 2, 3};
+        std::array<int, 3> a4 = a3;
+        CHECK(mozi::equal(a3, a4));
+        a3[0] = 0;
+        CHECK_FALSE(mozi::equal(a3, a4));
     }
 }
