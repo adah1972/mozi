@@ -122,7 +122,7 @@ TEST_CASE("serialization: net_pack")
 
         std::uint8_t expected_result[]{0x08, 0x12, 0x34, 0x12, 0x34,
                                        0x56, 0x78, 0x01, 0x00, 0xFF};
-        CHECK(mozi::equal(mozi::span(result),
+        CHECK(mozi::equal(mozi::span<const std::byte>(result),
                           make_byte_span(expected_result)));
 
         std::uint8_t value4{};
@@ -149,7 +149,7 @@ TEST_CASE("serialization: net_pack")
         std::uint8_t expected_result[]{0x00, 0x00, 0x00, 0x01, 0x00,
                                        0x02, 'H',  'e',  'l',  'l',
                                        'o',  0,    0,    0,    0x01};
-        CHECK(mozi::equal(mozi::span(result),
+        CHECK(mozi::equal(mozi::span<const std::byte>(result),
                           make_byte_span(expected_result)));
 
         mozi::deserialize_t input{result};
