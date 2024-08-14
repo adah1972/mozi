@@ -99,6 +99,7 @@ struct enum_name_comparator {
     }
 };
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 constexpr std::string_view remove_equals(std::string_view s) noexcept
 {
     std::size_t pos = s.find('=');

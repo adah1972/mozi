@@ -262,11 +262,13 @@ TEST_CASE("struct_reflection: copy to/from tuple")
         auto target = boost::pfr::structure_tie(s2);
         // Using a (tuple) variable is necessary as the copy target
         mozi::copy(std::move(s1), target);
+        // NOLINTBEGIN(bugprone-use-after-move)
         CHECK(s1.v1 == s2.v1);
         CHECK(s1.v2 == s2.v2);
         CHECK(s1.v3 == s2.v3);
         CHECK(s1.v4 == s2.v4);
         CHECK(s1.msg.empty());
+        // NOLINTEND(bugprone-use-after-move)
         CHECK_FALSE(s2.msg.empty());
 
         s1 = {};
