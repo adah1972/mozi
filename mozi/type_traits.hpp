@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Wu Yongwei
+ * Copyright (c) 2023-2024 Wu Yongwei
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -43,6 +43,14 @@ template <class Rng>
 auto adl_end(Rng&& rng) -> decltype(end(rng));
 
 } // namespace adl
+
+// Template to work around CWG 2518
+template <typename T>
+struct always_false {
+    static constexpr bool value = false;
+};
+template <typename T>
+inline constexpr bool always_false_v = always_false<T>::value;
 
 // Type traits for ranges
 template <typename T, typename = void>
@@ -142,6 +150,15 @@ struct is_scoped_enum<
     : std::true_type {};
 template <typename T>
 inline constexpr bool is_scoped_enum_v = is_scoped_enum<T>::value;
+
+// Type trait for whether a type is complete
+template <typename T, typename = void>
+struct is_type_complete : std::false_type {};
+template <typename T>
+struct is_type_complete<T, std::void_t<decltype(sizeof(T))>>
+    : std::true_type {};
+template <typename T>
+inline constexpr bool is_type_complete_v = is_type_complete<T>::value;
 
 // Type trait for containers
 template <typename T, typename = void>
