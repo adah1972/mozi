@@ -31,7 +31,10 @@
 #include "type_traits.hpp" // mozi::always_false/is_type_complete
 
 #if __has_include(<memory_resource>)
-#include <memory_resource> // std::pmr::polymorphic_allocator
+#include <memory_resource> // IWYU pragma: keep
+#if __has_include(<version>)
+#include <version>         // __cpp_lib_memory_resource
+#endif
 #endif
 
 #ifndef MOZI_SERIALIZATION_USES_PMR
