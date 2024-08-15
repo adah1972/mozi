@@ -26,12 +26,17 @@
 #include <cstddef>                      // std::size_t/byte
 #include <cstdint>                      // std::uint8_t/uint16_t/uint32_t
 #include <cstring>                      // std::memcpy
+#include <stdexcept>                    // std::logic_error/...
 #include <type_traits>                  // std::is_standard_layout/...
 #include <catch2/catch_test_macros.hpp> // Catch2 test macros
 #include "mozi/equal.hpp"               // mozi::equal
 #include "mozi/net_pack.hpp"            // mozi::net_pack::serializer/...
 #include "mozi/span.hpp"                // mozi::span
 #include "mozi/struct_reflection.hpp"   // DEFINE_STRUCT
+
+#if MOZI_SERIALIZATION_USES_PMR == 1
+#include <memory_resource>              // std::pmr::memory_resource
+#endif
 
 using mozi::deserialize_result;
 
@@ -46,6 +51,53 @@ auto make_byte_span(const T (&a)[N])
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         reinterpret_cast<const std::byte*>(std::end(a)));
 }
+
+#if MOZI_SERIALIZATION_USES_PMR == 1
+class static_once_buffer : public std::pmr::memory_resource {
+public:
+    static_once_buffer(void* ptr, std::size_t len) : ptr_(ptr), len_(len) {}
+    static_once_buffer(const static_once_buffer&) = delete;
+    static_once_buffer& operator=(const static_once_buffer&) = delete;
+    ~static_once_buffer() override = default;
+
+private:
+    // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+    void* do_allocate(std::size_t bytes, std::size_t alignment) override
+    {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        if (reinterpret_cast<std::uintptr_t>(ptr_) % alignment != 0) {
+            throw std::logic_error("buffer is not properly aligned");
+        }
+        if (len_ == 0) {
+            throw std::logic_error(
+                "static_once_buffer can allocate only once");
+        }
+        if (bytes > len_) {
+            throw std::length_error("not enough buffer is available");
+        }
+        len_ = 0;
+        return ptr_;
+    }
+
+    void do_deallocate(void* p, std::size_t bytes,
+                       std::size_t /*alignment*/) override
+    {
+        if (p != ptr_) {
+            throw std::invalid_argument("bad pointer to deallocate");
+        }
+        len_ = bytes;
+    }
+
+    bool do_is_equal(
+        const std::pmr::memory_resource& other) const noexcept override
+    {
+        return this == &other;
+    }
+
+    void* ptr_;
+    std::size_t len_;
+};
+#endif
 
 using char_array_8 = char[8];
 
@@ -178,3 +230,40 @@ TEST_CASE("serialization: multiple serializers")
     CHECK(input.empty());
     CHECK(mozi::equal(data, data2));
 }
+
+#if MOZI_SERIALIZATION_USES_PMR == 1
+TEST_CASE("serialization: pmr buffer")
+{
+    S1 data{1, 2, {'H', 'e', 'l', 'l', 'o'}, false};
+    std::byte buffer[100];
+    static_once_buffer res(buffer, sizeof buffer);
+    std::pmr::polymorphic_allocator<int> a(&res);
+    {
+        mozi::serialize_t result(a);
+        result.reserve(100);
+        mozi::net_pack::serialize(data, result);
+        std::uint8_t expected_result[]{0x00, 0x00, 0x00, 0x01, 0x00,
+                                       0x02, 'H',  'e',  'l',  'l',
+                                       'o',  0,    0,    0,    0x00};
+        CHECK(mozi::equal(mozi::span<const std::byte>(result),
+                          make_byte_span(expected_result)));
+
+        mozi::deserialize_t input{result};
+        S1 data2{};
+        auto ec = mozi::net_pack::deserialize(data2, input);
+        REQUIRE(ec == deserialize_result::success);
+        CHECK(input.empty());
+        CHECK(mozi::equal(data, data2));
+    }
+    {
+        mozi::serialize_t result(a);
+        result.reserve(100);
+        mozi::net_pack::serialize(data, result);
+        std::uint8_t expected_result[]{0x00, 0x00, 0x00, 0x01, 0x00,
+                                       0x02, 'H',  'e',  'l',  'l',
+                                       'o',  0,    0,    0,    0x00};
+        CHECK(mozi::equal(mozi::span<const std::byte>(result),
+                          make_byte_span(expected_result)));
+    }
+}
+#endif
