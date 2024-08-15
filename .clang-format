@@ -30,10 +30,11 @@ BraceWrapping:
   BeforeCatch:     true
   BeforeElse:      false
   IndentBraces:    false
+  SplitEmptyRecord: false
 BreakBeforeBinaryOperators: false
 BreakBeforeBraces: Custom
 BreakBeforeTernaryOperators: true
-BreakConstructorInitializersBeforeComma: true
+BreakConstructorInitializers: BeforeColon
 ColumnLimit:     76
 CommentPragmas:  '^ IWYU pragma:'
 ConstructorInitializerAllOnOneLineOrOnePerLine: true

@@ -19,6 +19,7 @@ Checks:
   -cppcoreguidelines-pro-bounds-pointer-arithmetic,
   -cppcoreguidelines-pro-type-static-cast-downcast,
   -cppcoreguidelines-pro-type-vararg,
+  llvm-namespace-comment,
   modernize-*,
   -modernize-avoid-c-arrays,
   -modernize-macro-to-enum,
@@ -37,9 +38,11 @@ FormatStyle:     file
 ExtraArgs:       ['-std=c++20']
 CheckOptions:
   - key:             cppcoreguidelines-special-member-functions.AllowMissingMoveFunctions
+    value:           'true'
+  - key:             llvm-namespace-comment.ShortNamespaceLines
     value:           '1'
   - key:             readability-implicit-bool-conversion.AllowPointerConditions
-    value:           '1'
+    value:           'true'
   - key:             readability-identifier-naming.MacroDefinitionCase
     value:           'UPPER_CASE'
   - key:             readability-identifier-naming.PrivateMemberSuffix
