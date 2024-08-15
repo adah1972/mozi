@@ -26,7 +26,8 @@
 #include <cstddef>                      // std::size_t/byte
 #include <cstdint>                      // std::uint8_t/uint16_t/uint32_t
 #include <cstring>                      // std::memcpy
-#include <stdexcept>                    // std::logic_error/...
+#include <stdexcept>                    // std::logic_error/runtime_error/...
+#include <tuple>                        // std::tuple
 #include <type_traits>                  // std::is_standard_layout/...
 #include <catch2/catch_test_macros.hpp> // Catch2 test macros
 #include "mozi/equal.hpp"               // mozi::equal
@@ -152,6 +153,53 @@ struct naive_serializer {
     }
 };
 
+template <typename T, typename = void>
+struct naive_numbered_serializer {
+    static_assert(std::is_standard_layout_v<T> &&
+                  std::is_trivially_copyable_v<T>);
+
+    template <typename SerializerList>
+    static void serialize(const T& value, mozi::serialize_t& dest,
+                          SerializerList /*unused*/, std::uint8_t& counter)
+    {
+        if (counter == UINT8_MAX) {
+            throw std::runtime_error("too many items to serialize");
+        }
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
+        std::array<std::byte, sizeof(T)> buffer;
+        std::memcpy(buffer.data(), &value, sizeof(T));
+        dest.push_back(static_cast<std::byte>(counter));
+        dest.insert(dest.end(), buffer.begin(), buffer.end());
+        ++counter;
+    }
+
+    template <typename SerializerList>
+    static deserialize_result
+    deserialize(T& value, mozi::deserialize_t& src,
+                SerializerList /*unused*/, std::uint8_t& counter)
+    {
+        if (counter == UINT8_MAX) {
+            throw std::runtime_error("too many items to deserialize");
+        }
+        if (src.size() < sizeof(T) + 1) {
+            return deserialize_result::input_truncated;
+        }
+        auto current_count = static_cast<std::uint8_t>(src[0]);
+        if (current_count != counter) {
+            return deserialize_result::unexpected_input_data;
+        }
+        ++counter;
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
+        std::array<std::byte, sizeof(T)> buffer;
+        for (std::size_t i = 0; i < sizeof(T); ++i) {
+            buffer[i] = src[i + 1];
+        }
+        src = src.subspan(sizeof(T) + 1);
+        std::memcpy(&value, buffer.data(), sizeof(T));
+        return deserialize_result::success;
+    }
+};
+
 } // unnamed namespace
 
 TEST_CASE("serialization: net_pack")
@@ -231,6 +279,37 @@ TEST_CASE("serialization: multiple serializers")
     CHECK(mozi::equal(data, data2));
 }
 
+TEST_CASE("serialization: stateful serializer")
+{
+    mozi::serializer_list<naive_numbered_serializer> serializers;
+    mozi::serialize_t result;
+    uint8_t counter{};
+    mozi::serialize(std::uint16_t(0x0012), result, serializers,
+                    std::tuple(&counter));
+    mozi::serialize(std::uint32_t(0x3456789a), result, serializers,
+                    std::tuple(&counter));
+    CHECK(counter == 2);
+    REQUIRE(result.size() == 8);
+    CHECK(result[0] == std::byte{0});
+    CHECK((result[1] == std::byte{0x00} || result[1] == std::byte{0x12}));
+    CHECK(result[3] == std::byte{1});
+    CHECK((result[4] == std::byte{0x34} || result[4] == std::byte{0x9a}));
+
+    counter = 0;
+    mozi::deserialize_t input{result};
+    std::uint16_t v1{};
+    auto ec =
+        mozi::deserialize(v1, input, serializers, std::tuple(&counter));
+    CHECK(counter == 1);
+    CHECK(ec == deserialize_result::success);
+    CHECK(v1 == 0x0012);
+    std::uint32_t v2{};
+    ec = mozi::deserialize(v2, input, serializers, std::tuple(&counter));
+    CHECK(counter == 2);
+    CHECK(ec == deserialize_result::success);
+    CHECK(v2 == 0x3456789a);
+}
+
 #if MOZI_SERIALIZATION_USES_PMR == 1
 TEST_CASE("serialization: pmr buffer")
 {
@@ -258,7 +337,9 @@ TEST_CASE("serialization: pmr buffer")
     {
         mozi::serialize_t result(a);
         result.reserve(100);
-        mozi::net_pack::serialize(data, result);
+        mozi::serialize(data, result,
+                        mozi::serializer_list<mozi::net_pack::serializer>{},
+                        std::tuple(nullptr));
         std::uint8_t expected_result[]{0x00, 0x00, 0x00, 0x01, 0x00,
                                        0x02, 'H',  'e',  'l',  'l',
                                        'o',  0,    0,    0,    0x00};
