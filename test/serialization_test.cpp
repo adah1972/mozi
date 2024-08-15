@@ -290,9 +290,9 @@ TEST_CASE("serialization: stateful serializer")
                     std::tuple(&counter));
     CHECK(counter == 2);
     REQUIRE(result.size() == 8);
-    CHECK(result[0] == std::byte{0});
+    CHECK((result[0] == std::byte{0}));
     CHECK((result[1] == std::byte{0x00} || result[1] == std::byte{0x12}));
-    CHECK(result[3] == std::byte{1});
+    CHECK((result[3] == std::byte{1}));
     CHECK((result[4] == std::byte{0x34} || result[4] == std::byte{0x9a}));
 
     counter = 0;
