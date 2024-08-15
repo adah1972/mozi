@@ -30,9 +30,25 @@
 #include "span.hpp"        // mozi::span
 #include "type_traits.hpp" // mozi::always_false/is_type_complete
 
+#if __has_include(<memory_resource>)
+#include <memory_resource> // std::pmr::polymorphic_allocator
+#endif
+
+#ifndef MOZI_SERIALIZATION_USES_PMR
+#if __cpp_lib_memory_resource >= 201603L
+#define MOZI_SERIALIZATION_USES_PMR 1
+#else
+#define MOZI_SERIALIZATION_USES_PMR 0
+#endif
+#endif
+
 namespace mozi {
 
+#if MOZI_SERIALIZATION_USES_PMR == 1
+using serialize_t = std::pmr::vector<std::byte>;
+#else
 using serialize_t = std::vector<std::byte>;
+#endif
 using deserialize_t = span<const std::byte>;
 
 enum class deserialize_result {
