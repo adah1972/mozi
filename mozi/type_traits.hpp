@@ -202,6 +202,18 @@ template <typename T>
 inline constexpr static bool is_reflected_struct_v =
     is_reflected_struct<T>::value;
 
+// Type trait for reflected bit fields
+template <typename T, typename = void>
+struct is_bit_fields_container : std::false_type {};
+template <typename T>
+struct is_bit_fields_container<
+    T, std::void_t<typename T::is_mozi_reflected,
+                   typename T::is_mozi_bit_fields_container>>
+    : std::true_type {};
+template <typename T>
+inline constexpr static bool is_bit_fields_container_v =
+    is_bit_fields_container<T>::value;
+
 } // namespace mozi
 
 #endif // MOZI_TYPE_TRAITS_HPP

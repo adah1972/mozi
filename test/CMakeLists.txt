@@ -32,6 +32,7 @@ add_executable(mozi_test
   equal_test.cpp
   print_test.cpp
   serialization_test.cpp
+  bit_fields_test.cpp
 )
 target_link_libraries(mozi_test PRIVATE Catch2::Catch2WithMain)
 

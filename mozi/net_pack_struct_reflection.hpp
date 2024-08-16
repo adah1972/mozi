@@ -28,12 +28,14 @@
 #include "net_pack_core.hpp"          // mozi::net_pack::serializer
 #include "serialization.hpp"          // mozi::serialize/deserialize/...
 #include "struct_reflection_core.hpp" // mozi::for_each
-#include "type_traits.hpp"            // mozi::is_reflected_struct
+#include "type_traits.hpp"            // mozi::is_reflected_struct/...
 
 namespace mozi::net_pack {
 
 template <typename T>
-struct serializer<T, std::enable_if_t<mozi::is_reflected_struct_v<T>>> {
+struct serializer<T,
+                  std::enable_if_t<mozi::is_reflected_struct_v<T> &&
+                                   !mozi::is_bit_fields_container_v<T>>> {
     template <typename SerializerList>
     static void serialize(T obj, serialize_t& dest,
                           SerializerList serializers)

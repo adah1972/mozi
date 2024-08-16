@@ -21,13 +21,12 @@
  *
  */
 
-#ifndef MOZI_NET_PACK_HPP
-#define MOZI_NET_PACK_HPP
+#ifndef MOZI_BIT_FIELDS_HPP
+#define MOZI_BIT_FIELDS_HPP
 
-#include "net_pack_core.hpp"              // IWYU pragma: export
-#include "net_pack_basic.hpp"             // IWYU pragma: keep
-#include "net_pack_array.hpp"             // IWYU pragma: keep
-#include "net_pack_struct_reflection.hpp" // IWYU pragma: keep
-#include "net_pack_bit_fields.hpp"        // IWYU pragma: keep
+#include "bit_fields_core.hpp"         // IWYU pragma: export
+#include "bit_fields_print.hpp"        // IWYU pragma: keep
+#include "struct_reflection_copy.hpp"  // IWYU pragma: keep
+#include "struct_reflection_equal.hpp" // IWYU pragma: keep
 
-#endif // MOZI_NET_PACK_HPP
+#endif // MOZI_BIT_FIELDS_HPP

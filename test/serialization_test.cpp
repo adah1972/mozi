@@ -26,12 +26,13 @@
 #include <cstddef>                      // std::size_t/byte
 #include <cstdint>                      // std::uint8_t/uint16_t/uint32_t
 #include <cstring>                      // std::memcpy
-#include <stdexcept>                    // std::logic_error/runtime_error/...
+#include <stdexcept>                    // std::runtime_error
 #include <tuple>                        // std::tuple
 #include <type_traits>                  // std::is_standard_layout/...
 #include <catch2/catch_test_macros.hpp> // Catch2 test macros
+#include "mozi/bit_fields.hpp"          // mozi::bit_field/...
 #include "mozi/equal.hpp"               // mozi::equal
-#include "mozi/net_pack.hpp"            // mozi::net_pack::serializer/...
+#include "mozi/net_pack.hpp"            // mozi::net_pack::*
 #include "mozi/span.hpp"                // mozi::span
 #include "mozi/struct_reflection.hpp"   // DEFINE_STRUCT
 
@@ -55,6 +56,25 @@ auto make_byte_span(const T (&a)[N])
 
 using char_array_8 = char[8];
 
+DEFINE_BIT_FIELDS_CONTAINER(     //
+    Flags8,                      //
+    (mozi::bit_field<4>)version, //
+    (mozi::bit_field<4>)ihl      //
+);
+
+DEFINE_BIT_FIELDS_CONTAINER( //
+    Flags16,                 //
+    (mozi::bit_field<5>)f1,  //
+    (mozi::bit_field<11>)f2  //
+);
+
+DEFINE_BIT_FIELDS_CONTAINER( //
+    Flags32,                 //
+    (mozi::bit_field<3>)f1,  //
+    (mozi::bit_field<17>)f2, //
+    (mozi::bit_field<12>)f3  //
+);
+
 DEFINE_STRUCT(        //
     S1,               //
     (int)v1,          //
@@ -63,8 +83,16 @@ DEFINE_STRUCT(        //
     (bool)flag        //
 );
 
+DEFINE_STRUCT(   //
+    S2,          //
+    (short)v1,   //
+    (Flags8)v2,  //
+    (Flags16)v3, //
+    (Flags32)v4  //
+);
+
 DEFINE_STRUCT(               //
-    S2,                      //
+    S3,                      //
     (int)v1,                 //
     (short)v2,               //
     (std::array<char, 8>)v3, //
@@ -212,6 +240,26 @@ TEST_CASE("serialization: net_pack")
         CHECK(input.empty());
         CHECK(mozi::equal(data, data2));
     }
+
+    SECTION("bit fields")
+    {
+        S2 data{42,
+                {{4}, {5}},
+                {{31}, {0}},
+                {{1}, {0x1FFFF}, {0b101010101010}}};
+        auto result = serialize(data);
+        std::uint8_t expected_result[]{0x00, 0x2a, 0x45, 0xf8, 0x00,
+                                       0x3f, 0xff, 0xfa, 0xaa};
+        CHECK(mozi::equal(mozi::span<const std::byte>(result),
+                          make_byte_span(expected_result)));
+
+        mozi::deserialize_t input{result};
+        S2 data2{};
+        auto ec = deserialize(data2, input);
+        REQUIRE(ec == deserialize_result::success);
+        CHECK(input.empty());
+        CHECK(mozi::equal(data, data2));
+    }
 }
 
 TEST_CASE("serialization: multiple serializers")
@@ -220,12 +268,12 @@ TEST_CASE("serialization: multiple serializers")
     mozi::serializer_list<mozi::net_pack::serializer, naive_serializer>
         serializers;
 
-    S2 data{1, 2, {'H', 'e', 'l', 'l', 'o'}, 1.5, false};
+    S3 data{1, 2, {'H', 'e', 'l', 'l', 'o'}, 1.5, false};
     mozi::serialize_t result;
     // WON'T COMPILE: mozi::net_pack::serialize(data, result);
     mozi::serialize(data, result, serializers);
     mozi::deserialize_t input{result};
-    S2 data2{};
+    S3 data2{};
     auto ec = mozi::deserialize(data2, input, serializers);
     REQUIRE(ec == deserialize_result::success);
     CHECK(input.empty());
