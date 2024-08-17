@@ -24,9 +24,8 @@
 #ifndef MOZI_NET_PACK_BIT_FIELDS_HPP
 #define MOZI_NET_PACK_BIT_FIELDS_HPP
 
-#include <climits>                    // CHAR_BIT/UINT32_MAX
+#include <climits>                    // CHAR_BIT
 #include <cstddef>                    // std::size_t
-#include <cstdint>                    // std::uint32_t
 #include <type_traits>                // std::enable_if
 #include "bit_fields_core.hpp"        // mozi::count_bit_fields/...
 #include "net_pack_core.hpp"          // mozi::net_pack::serializer
@@ -35,15 +34,6 @@
 #include "type_traits.hpp"            // mozi::is_bit_fields_container/...
 
 namespace mozi::net_pack {
-
-namespace detail {
-
-constexpr std::uint32_t get_bit_field_mask(unsigned len)
-{
-    return ~(UINT32_MAX << len);
-}
-
-} // namespace detail
 
 template <typename T>
 struct serializer<T, std::enable_if_t<mozi::is_bit_fields_container_v<T>>> {
@@ -81,7 +71,7 @@ struct serializer<T, std::enable_if_t<mozi::is_bit_fields_container_v<T>>> {
                     constexpr unsigned len =
                         remove_cvref_t<decltype(field)>::length;
                     field.value = ((unsigned{value} >> (total_len - len)) &
-                                   detail::get_bit_field_mask(len));
+                                   mozi::detail::get_bit_field_mask(len));
                     value <<= len;
                 });
         }

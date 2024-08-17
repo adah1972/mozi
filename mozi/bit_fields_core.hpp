@@ -24,6 +24,7 @@
 #ifndef MOZI_BIT_FIELDS_CORE_HPP
 #define MOZI_BIT_FIELDS_CORE_HPP
 
+#include <climits>                    // UINT32_MAX
 #include <cstddef>                    // std::size_t
 #include <cstdint>                    // std::uint8_t/uint16_t/uint32_t
 #include <type_traits>                // std::enable_if
@@ -52,6 +53,15 @@ template <std::size_t N>
 struct bits_storage<N, std::enable_if_t<(N > 16 && N <= 32)>> {
     using type = std::uint32_t;
 };
+
+constexpr std::uint32_t get_bit_field_mask(unsigned len)
+{
+    // Shift count overflow is undefined behavior
+    if (len >= 32) {
+        return UINT32_MAX;
+    }
+    return ~(UINT32_MAX << len);
+}
 
 } // namespace detail
 
