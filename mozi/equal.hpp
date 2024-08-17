@@ -39,25 +39,8 @@ struct equality_comparer {
     {
         static_assert(std::is_same_v<mozi::remove_cvref_t<T1>, T> &&
                       std::is_same_v<mozi::remove_cvref_t<U1>, U>);
-        return std::equal_to<>{}(std::forward<T1>(lhs),
-                                 std::forward<U1>(rhs));
-    }
-};
-
-template <typename T, typename U, std::size_t N>
-struct equality_comparer<T[N], U[N]> {
-    template <typename T1, typename U1>
-    constexpr bool operator()(T1 (&lhs)[N], U1 (&rhs)[N]) const
-    {
-        static_assert(
-            std::is_same_v<std::remove_cv_t<T1>, std::remove_cv_t<T>> &&
-            std::is_same_v<std::remove_cv_t<U1>, std::remove_cv_t<U>>);
-        for (std::size_t i = 0; i < N; ++i) {
-            if (lhs[i] != rhs[i]) {
-                return false;
-            }
-        }
-        return true;
+        return std::equal_to{}(std::forward<T1>(lhs),
+                               std::forward<U1>(rhs));
     }
 };
 
@@ -76,6 +59,23 @@ struct equal_fn {
 } // namespace detail
 
 inline constexpr detail::equal_fn equal{};
+
+template <typename T, typename U, std::size_t N>
+struct equality_comparer<T[N], U[N]> {
+    template <typename T1, typename U1>
+    constexpr bool operator()(T1 (&lhs)[N], U1 (&rhs)[N]) const
+    {
+        static_assert(
+            std::is_same_v<std::remove_cv_t<T1>, std::remove_cv_t<T>> &&
+            std::is_same_v<std::remove_cv_t<U1>, std::remove_cv_t<U>>);
+        for (std::size_t i = 0; i < N; ++i) {
+            if (!mozi::equal(lhs[i], rhs[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+};
 
 } // namespace mozi
 
