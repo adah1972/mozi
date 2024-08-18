@@ -20,7 +20,7 @@ endif()
 if(MSVC)
   add_compile_options(/W3)
 else()
-  add_compile_options(-Wall -Wextra)
+  add_compile_options(-Wall -Wextra -Wsign-compare -Wsign-conversion)
 endif()
 
 find_package(Catch2 3 REQUIRED)
