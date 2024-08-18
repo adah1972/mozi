@@ -65,6 +65,8 @@ DEFINE_STRUCT(       //
     (std::string)msg //
 );
 
+DECLARE_COMPARISON(S1);
+
 DEFINE_STRUCT( //
     S2,        //
     (int)v2,   //
@@ -282,34 +284,39 @@ TEST_CASE("struct_reflection: copy to/from tuple")
 #endif
 }
 
+TEST_CASE("struct_reflection: compare")
+{
+    using S = data::S1;
+    S s1{1, 2, 3, 4, "Hello"};
+    S s2{1, 2, 3, 4, "Hello"};
+    S s3{1, 2, 3, 4, ""};
+    S s4{1, 2, 3, 0, "Hello"};
+    CHECK(mozi::equal(s1, s2));
+    CHECK(s1 == s2);
+    CHECK_FALSE(mozi::equal(s1, s3));
+    CHECK_FALSE(mozi::equal(s1, s4));
+    CHECK(s1 != s3);
+    CHECK(s1 != s4);
+
+    CHECK(s1 > s3);
+    CHECK(s1 >= s3);
+    CHECK(s3 > s4);
+    CHECK(s4 <= s3);
+}
+
 TEST_CASE("struct_reflection: equal")
 {
-    SECTION("homogeneous")
-    {
-        using S = data::S1;
-        S s1{1, 2, 3, 4, "Hello"};
-        S s2{1, 2, 3, 4, "Hello"};
-        S s3{1, 2, 3, 4, ""};
-        S s4{1, 2, 3, 0, "Hello"};
-        CHECK(mozi::equal(s1, s2));
-        CHECK_FALSE(mozi::equal(s1, s3));
-        CHECK_FALSE(mozi::equal(s1, s4));
-    }
+    // Reflected structs of different sizes are never equal
+    constexpr data::S2 s2{};
+    constexpr data::S5 s5{};
+    constexpr bool result = mozi::equal(s2, s5);
+    CHECK_FALSE(result);
 
-    SECTION("heterogeneous")
-    {
-        // Reflected structs of different sizes are never equal
-        constexpr data::S2 s2{};
-        constexpr data::S5 s5{};
-        constexpr bool result = mozi::equal(s2, s5);
-        CHECK_FALSE(result);
-
-        // Reflected structs of the same size may be equal
-        data::S2 s21{1, 2, true};
-        data::S4 s41{1, 2, true};
-        data::S4 s42{1, 2, false};
-        CHECK(mozi::equal(s21, s41));
-        CHECK_FALSE(mozi::equal(s2, s21));
-        CHECK_FALSE(mozi::equal(s21, s42));
-    }
+    // Reflected structs of the same size may be equal
+    data::S2 s21{1, 2, true};
+    data::S4 s41{1, 2, true};
+    data::S4 s42{1, 2, false};
+    CHECK(mozi::equal(s21, s41));
+    CHECK_FALSE(mozi::equal(s2, s21));
+    CHECK_FALSE(mozi::equal(s21, s42));
 }

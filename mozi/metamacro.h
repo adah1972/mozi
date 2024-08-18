@@ -1243,4 +1243,6 @@
 // MOZI_PAIR((int) x) => MOZI_EXPAND(int) x => int x
 #define MOZI_PAIR(x) MOZI_EXPAND x
 
+#define MOZI_DO_PRAGMA(x) _Pragma(#x)
+
 #endif // MOZI_METAMACRO_H

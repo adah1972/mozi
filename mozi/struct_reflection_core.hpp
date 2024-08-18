@@ -183,12 +183,39 @@ using mozi::operator""_cts;
         using type = typename st::_field<st, I>::type;                     \
     }
 
+// While it is possible to provide this definition as a friend inside the
+// reflected struct, it may not be necessary and can cause some compiler
+// warnings.
+#define MOZI_DECLARE_LESS_COMPARISON(st)                                   \
+    constexpr bool operator<(const st& lhs, const st& rhs)                 \
+    {                                                                      \
+        static_assert(mozi::is_reflected_struct_v<st>);                    \
+        int result = 0;                                                    \
+        mozi::zip(lhs, rhs,                                                \
+            [&result](auto /*name1*/, auto /*name2*/,                      \
+                      const auto& value1, const auto& value2) {            \
+                if (result == 0) {                                         \
+                    if (value1 < value2) {                                 \
+                        result = -1;                                       \
+                    } else if (value2 < value1) {                          \
+                        result = 1;                                        \
+                    }                                                      \
+                }                                                          \
+            });                                                            \
+        return result < 0;                                                 \
+    }
+
 #if !defined(DEFINE_STRUCT) && !defined(MOZI_NO_DEFINE_STRUCT)
 #define DEFINE_STRUCT MOZI_DEFINE_STRUCT
 #endif
 
 #if !defined(DECLARE_TUPLE_LIKE) && !defined(MOZI_NO_DECLARE_TUPLE_LIKE)
 #define DECLARE_TUPLE_LIKE MOZI_DECLARE_TUPLE_LIKE
+#endif
+
+#if !defined(DECLARE_LESS_COMPARISON) &&                                   \
+    !defined(MOZI_NO_DECLARE_LESS_COMPARISON)
+#define DECLARE_LESS_COMPARISON MOZI_DECLARE_LESS_COMPARISON
 #endif
 
 #endif // MOZI_STRUCT_REFLECTION_CORE_HPP

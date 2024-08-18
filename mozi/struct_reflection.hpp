@@ -24,9 +24,9 @@
 #ifndef MOZI_STRUCT_REFLECTION_HPP
 #define MOZI_STRUCT_REFLECTION_HPP
 
-#include "struct_reflection_core.hpp"  // IWYU pragma: export
-#include "struct_reflection_copy.hpp"  // IWYU pragma: export
-#include "struct_reflection_equal.hpp" // IWYU pragma: export
-#include "struct_reflection_print.hpp" // IWYU pragma: export
+#include "struct_reflection_core.hpp"    // IWYU pragma: export
+#include "struct_reflection_compare.hpp" // IWYU pragma: export
+#include "struct_reflection_copy.hpp"    // IWYU pragma: export
+#include "struct_reflection_print.hpp"   // IWYU pragma: export
 
 #endif // MOZI_STRUCT_REFLECTION_HPP
