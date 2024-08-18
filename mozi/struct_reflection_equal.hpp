@@ -67,13 +67,6 @@ struct equality_comparer<T, U,
         return mozi::equal(lhs, rhs);                                      \
     }
 
-#define MOZI_DECLARE_EQUAL_COMPARISON_EX_IMP(st)                           \
-    MOZI_DECLARE_EQUAL_COMPARISON(st)                                      \
-    constexpr bool operator!=(const st& lhs, const st& rhs)                \
-    {                                                                      \
-        return !(lhs == rhs);                                              \
-    }
-
 #if !defined(DECLARE_EQUAL_COMPARISON) &&                                  \
     !defined(MOZI_NO_DECLARE_EQUAL_COMPARISON)
 #define DECLARE_EQUAL_COMPARISON MOZI_DECLARE_EQUAL_COMPARISON
