@@ -24,7 +24,6 @@
 #ifndef MOZI_BIT_FIELDS_PRINT_HPP
 #define MOZI_BIT_FIELDS_PRINT_HPP
 
-#include <bitset>                      // std::bitset
 #include <ostream>                     // std::ostream
 #include <type_traits>                 // std::enable_if
 #include "compile_time_string.hpp"     // MOZI_CTS_GET_VALUE
@@ -42,10 +41,8 @@ struct printer<T, std::enable_if_t<is_bit_fields_container_v<T>>> {
         os <<  "{\n";
         for_each(obj, [&os, depth](auto index, auto name,
                                    const auto& field) {
-            constexpr unsigned len =
-                remove_cvref_t<decltype(field)>::length;
-            detail::output_field(std::bitset<len>(field), os,
-                                 MOZI_CTS_GET_VALUE(name), depth + 1);
+            detail::output_field(field,
+                                 os, MOZI_CTS_GET_VALUE(name), depth + 1);
             if constexpr (index != remove_cvref_t<T>::_size - 1) {
                 os << ",\n";
             } else {
