@@ -149,6 +149,21 @@ constexpr bool operator==(const bit_field<N, S>& lhs,
     return lhs.underlying_value() == rhs.underlying_value();
 }
 
+#if __cplusplus >= 202002L || (defined(_MSVC_LANG) && _MSVC_LANG >= 202002L)
+
+template <std::size_t N, bit_field_signedness S>
+constexpr auto operator<=>(const bit_field<N, S>& lhs,
+                           const bit_field<N, S>& rhs)
+{
+    if constexpr (S == bit_field_unsigned) {
+        return static_cast<unsigned>(lhs) <=> static_cast<unsigned>(rhs);
+    } else {
+        return static_cast<int>(lhs) <=> static_cast<int>(rhs);
+    }
+}
+
+#else
+
 template <std::size_t N, bit_field_signedness S>
 constexpr bool operator!=(const bit_field<N, S>& lhs,
                           const bit_field<N, S>& rhs)
@@ -187,6 +202,8 @@ constexpr bool operator>=(const bit_field<N, S>& lhs,
 {
     return !(lhs < rhs);
 }
+
+#endif
 
 namespace detail {
 
