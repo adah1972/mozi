@@ -24,9 +24,8 @@
 #ifndef MOZI_BIT_FIELDS_CORE_HPP
 #define MOZI_BIT_FIELDS_CORE_HPP
 
-#include <climits>                    // UINT32_MAX
 #include <cstddef>                    // std::size_t
-#include <cstdint>                    // std::uint8_t/uint16_t/uint32_t
+#include <cstdint>                    // std::uint8_t/uint16_t/uint32_t/...
 #include <type_traits>                // std::enable_if
 #include "metamacro.h"                // MOZI_GET_ARG_COUNT/MOZI_REPEAT_ON
 #include "struct_reflection_core.hpp" // mozi::for_each_meta/MOZI_FIELD
