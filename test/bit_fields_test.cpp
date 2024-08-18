@@ -32,6 +32,15 @@
 
 namespace {
 
+DEFINE_BIT_FIELDS_CONTAINER(                           //
+    Date,                                              //
+    (mozi::bit_field<23, mozi::bit_field_signed>)year, //
+    (mozi::bit_field<4>)month,                         //
+    (mozi::bit_field<5>)day                            //
+);
+
+DECLARE_COMPARISON(Date);
+
 DEFINE_BIT_FIELDS_CONTAINER(  //
     Flags,                    //
     (mozi::bit_field<3>)f1,  //
@@ -55,10 +64,36 @@ DEFINE_STRUCT( //
 
 } // unnamed namespace
 
+TEST_CASE("bit_fields: basic")
+{
+    Date d1{2023, 12, 31};
+    Date d2{2024, 1, 13};
+    CHECK(d1 == d1);
+    CHECK(d1 < d2);
+    CHECK(d1 <= d2);
+    CHECK(d2 > d1);
+    CHECK(!(d2 < d1));
+    d2.year = -1;
+    CHECK(d2.year == -1);
+    CHECK(d2.year != 0);
+    CHECK(d2.month == 1);
+    CHECK(d2.day == 13);
+    CHECK(d2 < d1);
+}
+
 TEST_CASE("bit_fields: print")
 {
-    S1 data{42, 0x1234, {{1}, {0x1FFFF}, {0b101010101010}}};
     std::ostringstream oss;
+    Date d{2024, 8, 17};
+    mozi::println(d, oss);
+    CHECK(oss.str() == "{\n"
+                       "    year: 2024,\n"
+                       "    month: 8,\n"
+                       "    day: 17\n"
+                       "}\n");
+
+    oss.str("");
+    S1 data{42, 0x1234, {{1}, {0x1FFFF}, {0b101010101010}}};
     oss << std::hex;
     mozi::println(data, oss);
     CHECK(oss.str() == "{\n"
@@ -72,7 +107,7 @@ TEST_CASE("bit_fields: print")
                        "}\n");
 }
 
-TEST_CASE("bit_fields: copy & equal")
+TEST_CASE("bit_fields: copy")
 {
     S1 data{42, 0x1234, {{1}, {0x1FFFF}, {0b101010101010}}};
     S2 data2{};

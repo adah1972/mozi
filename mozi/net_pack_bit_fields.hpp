@@ -51,7 +51,7 @@ struct serializer<T, std::enable_if_t<mozi::is_bit_fields_container_v<T>>> {
         mozi::for_each(
             obj, [&](auto /*index*/, auto /*name*/, const auto& field) {
                 value <<= remove_cvref_t<decltype(field)>::length;
-                value |= field.value;
+                value |= field.underlying_value();
             });
         mozi::serialize(value, dest, serializers);
     }
@@ -70,8 +70,7 @@ struct serializer<T, std::enable_if_t<mozi::is_bit_fields_container_v<T>>> {
                 obj, [&](auto /*index*/, auto /*name*/, auto& field) {
                     constexpr unsigned len =
                         remove_cvref_t<decltype(field)>::length;
-                    field.value = ((unsigned{value} >> (total_len - len)) &
-                                   mozi::detail::get_bit_field_mask(len));
+                    field = (unsigned{value} >> (total_len - len));
                     value <<= len;
                 });
         }

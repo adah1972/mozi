@@ -65,32 +65,135 @@ constexpr std::uint32_t get_bit_field_mask(unsigned len)
 
 } // namespace detail
 
-template <std::size_t N>
-struct bit_field {
+enum class bit_field_signedness { is_unsigned, is_signed };
+
+inline constexpr auto bit_field_unsigned = bit_field_signedness::is_unsigned;
+inline constexpr auto bit_field_signed = bit_field_signedness::is_signed;
+
+template <std::size_t N,
+          bit_field_signedness Signedness = bit_field_unsigned>
+class bit_field {
 public:
     static_assert(sizeof(unsigned) >= sizeof(std::uint32_t));
 
     using value_type = typename detail::bits_storage<N>::type;
     static constexpr std::size_t length = N;
-    value_type value;
+    static constexpr auto signedness = Signedness;
 
-    constexpr bit_field& operator=(unsigned n)
+    constexpr bit_field() = default;
+
+    template <bit_field_signedness S = Signedness,
+              std::enable_if_t<S == bit_field_unsigned, int> = 0>
+    constexpr bit_field(unsigned value)
     {
-        value = n;
+        *this = value;
+    }
+    template <bit_field_signedness S = Signedness,
+              std::enable_if_t<S == bit_field_signed, int> = 0>
+    constexpr bit_field(int value)
+    {
+        *this = value;
+    }
+
+    template <bit_field_signedness S = Signedness,
+              std::enable_if_t<S == bit_field_unsigned, int> = 0>
+    constexpr bit_field& operator=(unsigned value)
+    {
+        value_ = value & detail::get_bit_field_mask(N);
         return *this;
     }
+    template <bit_field_signedness S = Signedness,
+              std::enable_if_t<S == bit_field_signed, int> = 0>
+    constexpr bit_field& operator=(int value)
+    {
+        value_ =
+            static_cast<value_type>(value) & detail::get_bit_field_mask(N);
+        return *this;
+    }
+
+    constexpr value_type underlying_value() const
+    {
+        return value_;
+    }
+
+    template <bit_field_signedness S = Signedness,
+              std::enable_if_t<S == bit_field_unsigned, int> = 0>
     constexpr operator unsigned() const
     {
-        return value;
+        return value_;
     }
+    template <bit_field_signedness S = Signedness,
+              std::enable_if_t<S == bit_field_signed, int> = 0>
+    constexpr operator int() const
+    {
+        // Sign extension is needed in this case, and two's complement is
+        // assumed.
+        static_assert(N > 1);
+        constexpr unsigned sign_bit = 1 << (N - 1);
+        bool is_positive = (unsigned{value_} & sign_bit) == 0;
+        if (is_positive) {
+            return static_cast<int>(value_);
+        }
+        return static_cast<int>(unsigned{value_} |
+                                ~detail::get_bit_field_mask(N));
+    }
+
+private:
+    value_type value_;
 };
+
+template <std::size_t N, bit_field_signedness S>
+constexpr bool operator==(const bit_field<N, S>& lhs,
+                          const bit_field<N, S>& rhs)
+{
+    return lhs.underlying_value() == rhs.underlying_value();
+}
+
+template <std::size_t N, bit_field_signedness S>
+constexpr bool operator!=(const bit_field<N, S>& lhs,
+                          const bit_field<N, S>& rhs)
+{
+    return !(lhs == rhs);
+}
+
+template <std::size_t N, bit_field_signedness S>
+constexpr bool operator<(const bit_field<N, S>& lhs,
+                         const bit_field<N, S>& rhs)
+{
+    if constexpr (S == bit_field_unsigned) {
+        return static_cast<unsigned>(lhs) < static_cast<unsigned>(rhs);
+    } else {
+        return static_cast<int>(lhs) < static_cast<int>(rhs);
+    }
+}
+
+template <std::size_t N, bit_field_signedness S>
+constexpr bool operator>(const bit_field<N, S>& lhs,
+                         const bit_field<N, S>& rhs)
+{
+    return rhs < lhs;
+}
+
+template <std::size_t N, bit_field_signedness S>
+constexpr bool operator<=(const bit_field<N, S>& lhs,
+                          const bit_field<N, S>& rhs)
+{
+    return !(rhs < lhs);
+}
+
+template <std::size_t N, bit_field_signedness S>
+constexpr bool operator>=(const bit_field<N, S>& lhs,
+                          const bit_field<N, S>& rhs)
+{
+    return !(lhs < rhs);
+}
 
 namespace detail {
 
 template <typename T>
 struct is_bit_field : std::false_type {};
-template <std::size_t N>
-struct is_bit_field<bit_field<N>> : std::true_type {};
+template <std::size_t N, bit_field_signedness Signedness>
+struct is_bit_field<bit_field<N, Signedness>> : std::true_type {};
 template <typename T>
 inline constexpr bool is_bit_field_v = is_bit_field<T>::value;
 
