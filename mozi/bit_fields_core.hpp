@@ -98,6 +98,7 @@ public:
               std::enable_if_t<S == bit_field_unsigned, int> = 0>
     constexpr bit_field& operator=(unsigned value)
     {
+        // Truncated
         value_ = value & detail::get_bit_field_mask(N);
         return *this;
     }
@@ -105,14 +106,26 @@ public:
               std::enable_if_t<S == bit_field_signed, int> = 0>
     constexpr bit_field& operator=(int value)
     {
-        value_ =
-            static_cast<value_type>(value) & detail::get_bit_field_mask(N);
+        // Truncated and sign-extended, assuming two's-complement
+        // representation
+        static_assert(N > 1);
+        if (value >= 0) {
+            value_ = static_cast<value_type>(value) &
+                     detail::get_bit_field_mask(N - 1);
+        } else {
+            value_ = static_cast<value_type>(value) |
+                     ~detail::get_bit_field_mask(N - 1);
+        }
         return *this;
     }
 
     constexpr value_type underlying_value() const
     {
-        return value_;
+        if constexpr (Signedness == bit_field_unsigned) {
+            return value_;
+        } else {
+            return value_ & detail::get_bit_field_mask(N);
+        }
     }
 
     template <bit_field_signedness S = Signedness,
@@ -125,16 +138,7 @@ public:
               std::enable_if_t<S == bit_field_signed, int> = 0>
     constexpr operator int() const
     {
-        // Sign extension is needed in this case, and two's complement is
-        // assumed.
-        static_assert(N > 1);
-        constexpr unsigned sign_bit = 1 << (N - 1);
-        bool is_positive = (unsigned{value_} & sign_bit) == 0;
-        if (is_positive) {
-            return static_cast<int>(value_);
-        }
-        return static_cast<int>(unsigned{value_} |
-                                ~detail::get_bit_field_mask(N));
+        return static_cast<std::make_signed_t<value_type>>(value_);
     }
 
 private:

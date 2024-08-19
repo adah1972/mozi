@@ -79,11 +79,44 @@ TEST_CASE("bit_fields: basic")
     CHECK(d2.month == 1);
     CHECK(d2.day == 13);
     CHECK(d2 < d1);
+
+    d2.day = 33;
+    CHECK(d2.day != 33);
+    mozi::bit_field<3, mozi::bit_field_signed> f1{3};
+    CHECK(f1 == 3);
+    f1 = -4;
+    CHECK(f1 == -4);
+    f1 = 4;
+    CHECK(f1 != 4);
+    f1 = -5;
+    CHECK(f1 != -5);
+    mozi::bit_field<9, mozi::bit_field_signed> f2{-2};
+    CHECK(f2 == -2);
+    mozi::bit_field<19, mozi::bit_field_signed> f3{-3};
+    CHECK(f3 == -3);
+    mozi::bit_field<32, mozi::bit_field_signed> f4{-4};
+    CHECK(f4 == -4);
 }
 
 TEST_CASE("bit_fields: print")
 {
     std::ostringstream oss;
+    mozi::bit_field<4> f1{1};
+    mozi::println(f1, oss);
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#endif
+    f1 = -2; // warning expected here
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+    mozi::println(f1, oss);
+    mozi::bit_field<4, mozi::bit_field_signed> f2{-3};
+    mozi::println(f2, oss);
+    CHECK(oss.str() == "1\n14\n-3\n");
+
+    oss.str("");
     Date d{2024, 8, 17};
     mozi::println(d, oss);
     CHECK(oss.str() == "{\n"
