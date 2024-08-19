@@ -108,10 +108,10 @@ public:
     {
         // Truncated and sign-extended, assuming two's-complement
         // representation
-        static_assert(N > 1);
-        if (value >= 0) {
+        constexpr unsigned sign_bit = 1U << (N - 1);
+        if (value >= 0 && (static_cast<unsigned>(value) & sign_bit) == 0) {
             value_ = static_cast<value_type>(value) &
-                     detail::get_bit_field_mask(N - 1);
+                     detail::get_bit_field_mask(N);
         } else {
             value_ = static_cast<value_type>(value) |
                      ~detail::get_bit_field_mask(N - 1);

@@ -82,20 +82,26 @@ TEST_CASE("bit_fields: basic")
 
     d2.day = 33;
     CHECK(d2.day != 33);
-    mozi::bit_field<3, mozi::bit_field_signed> f1{3};
-    CHECK(f1 == 3);
-    f1 = -4;
-    CHECK(f1 == -4);
-    f1 = 4;
-    CHECK(f1 != 4);
-    f1 = -5;
-    CHECK(f1 != -5);
-    mozi::bit_field<9, mozi::bit_field_signed> f2{-2};
-    CHECK(f2 == -2);
-    mozi::bit_field<19, mozi::bit_field_signed> f3{-3};
-    CHECK(f3 == -3);
-    mozi::bit_field<32, mozi::bit_field_signed> f4{-4};
-    CHECK(f4 == -4);
+    mozi::bit_field<1, mozi::bit_field_signed> f1{};
+    CHECK(f1 == 0);
+    f1 = 1; // overflown
+    CHECK(f1 == -1);
+    f1 = -1;
+    CHECK(f1 == -1);
+    mozi::bit_field<3, mozi::bit_field_signed> f2{3};
+    CHECK(f2 == 3);
+    f2 = -4;
+    CHECK(f2 == -4);
+    f2 = 4; // overflown
+    CHECK(f2 != 4);
+    f2 = -5; // overflown
+    CHECK(f2 != -5);
+    mozi::bit_field<9, mozi::bit_field_signed> f3{-2};
+    CHECK(f3 == -2);
+    mozi::bit_field<19, mozi::bit_field_signed> f4{-3};
+    CHECK(f4 == -3);
+    mozi::bit_field<32, mozi::bit_field_signed> f5{-4};
+    CHECK(f5 == -4);
 }
 
 TEST_CASE("bit_fields: print")
