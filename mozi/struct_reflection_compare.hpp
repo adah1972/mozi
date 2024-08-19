@@ -27,7 +27,7 @@
 #include "metamacro.h"                 // MOZI_DO_PRAGMA
 #include "compare.hpp"                 // MOZI_USE_THREE_WAY_COMPARISON/...
 #include "struct_reflection_core.hpp"  // MOZI_DECLARE_LESS_COMPARISON/...
-#include "struct_reflection_equal.hpp" // MOZI_DECLARE_EQUAL_COMPARISON
+#include "struct_reflection_equal.hpp" // IWYU pragma: export
 
 #if MOZI_USE_THREE_WAY_COMPARISON
 
