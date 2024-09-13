@@ -45,6 +45,30 @@ reflection for `enum`s and `struct`s was included, as well as macros
 that were necessary in such code generation usage.  Support facilities
 were then added, like equality comparison and serialization.
 
+A basic example of static reflection follows:
+
+```cpp
+DEFINE_STRUCT(
+    S,
+    (int)v1,
+    (std::vector<uint8_t>)v2,
+    (std::string)msg
+);
+
+S data{42, {0x01, 0x02}, "Hello"};
+mozi::println(data);
+```
+
+The resulting output would be:
+
+```
+{
+    v1: 42,
+    v2: { 1, 2 },
+    msg: "Hello"
+}
+```
+
 More may come later.
 
 
