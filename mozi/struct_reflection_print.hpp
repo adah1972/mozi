@@ -47,8 +47,7 @@ void output_field(const T& obj, std::ostream& os, const char* name,
 } // namespace detail
 
 template <typename T>
-struct printer<T, std::enable_if_t<is_reflected_struct_v<T> &&
-                                   !is_bit_fields_container_v<T>>> {
+struct printer<T, std::enable_if_t<is_reflected_struct_v<T>>> {
     void operator()(const T& obj, std::ostream& os, int depth) const
     {
         os <<  "{\n";

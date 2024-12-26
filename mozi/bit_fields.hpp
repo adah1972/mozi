@@ -25,8 +25,8 @@
 #define MOZI_BIT_FIELDS_HPP
 
 #include "bit_fields_core.hpp"         // IWYU pragma: export
-#include "bit_fields_print.hpp"        // IWYU pragma: keep
 #include "struct_reflection_copy.hpp"  // IWYU pragma: keep
 #include "struct_reflection_equal.hpp" // IWYU pragma: keep
+#include "struct_reflection_print.hpp" // IWYU pragma: keep
 
 #endif // MOZI_BIT_FIELDS_HPP
