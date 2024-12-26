@@ -55,7 +55,7 @@ struct printer<T, std::enable_if_t<is_reflected_struct_v<T>>> {
                                    const auto& field) {
             detail::output_field(field, os, MOZI_CTS_GET_VALUE(name),
                                  depth + 1);
-            if constexpr (index != remove_cvref_t<T>::_size - 1) {
+            if constexpr (index != T::_size - 1) {
                 os << ",\n";
             } else {
                 os << '\n';
