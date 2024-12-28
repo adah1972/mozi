@@ -25,6 +25,7 @@ Checks:
   -modernize-macro-to-enum,
   -modernize-use-constraints,
   -modernize-deprecated-headers,
+  -modernize-use-designated-initializers,
   -modernize-use-nodiscard,
   -modernize-use-trailing-return-type,
   readability-*,
@@ -41,6 +42,8 @@ CheckOptions:
     value:           'true'
   - key:             llvm-namespace-comment.ShortNamespaceLines
     value:           '1'
+  - key:             readability-function-cognitive-complexity.IgnoreMacros
+    value:           'true'
   - key:             readability-implicit-bool-conversion.AllowPointerConditions
     value:           'true'
   - key:             readability-identifier-naming.MacroDefinitionCase
