@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Wu Yongwei
+ * Copyright (c) 2024-2025 Wu Yongwei
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -24,19 +24,20 @@
 #ifndef MOZI_SPAN_HPP
 #define MOZI_SPAN_HPP
 
+#define MOZI_SPAN_GSL 1
+#define MOZI_SPAN_STD 2
+
 #ifndef MOZI_USE_SPAN
 #if __cplusplus > 201703L && __has_include(<span>)
-#define MOZI_USE_SPAN 2
+#define MOZI_USE_SPAN MOZI_SPAN_STD
 #elif __has_include(<gsl/span>)
-#define MOZI_USE_SPAN 1
-#else
-#define MOZI_USE_SPAN 0
+#define MOZI_USE_SPAN MOZI_SPAN_GSL
 #endif
 #endif
 
-#if MOZI_USE_SPAN == 2
+#if MOZI_USE_SPAN == MOZI_SPAN_STD
 #include <span>        // IWYU pragma: export std::span
-#elif MOZI_USE_SPAN == 1
+#elif MOZI_USE_SPAN == MOZI_SPAN_GSL
 #include <gsl/span>    // IWYU pragma: export gsl::span
 #else
 #error "No span support is detected"
@@ -47,7 +48,7 @@
 
 namespace mozi {
 
-#if MOZI_USE_SPAN == 2
+#if MOZI_USE_SPAN == MOZI_SPAN_STD
 using std::span;
 #else
 using gsl::span;
