@@ -140,6 +140,15 @@ cmake "-DCMAKE_TOOLCHAIN_FILE=/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake" .
 ```
 
 
+Related Speeches and Articles
+-----------------------------
+
+- [C++ 及系统软件技术大会 2023：C++ 之静态反射（演讲 PDF）](https://github.com/adah1972/cpp_summit_2023/)
+- [PureCPP 大会 2024：使用 Mozi 库的静态反射：调试输出和序列化（演讲 PDF 和视频）](http://purecpp.cn/detail?id=2457)
+- [Static reflection in C++ (blog article)](https://yongweiwu.wordpress.com/2024/12/28/static-reflection-in-cxx/)
+- [Bit fields, byte order, and serialization (blog article)](https://yongweiwu.wordpress.com/2025/02/21/bit-fields-byte-order-and-serialization/)
+
+
 [lnk_brew]:   https://brew.sh/
 [lnk_catch2]: https://github.com/catchorg/Catch2
 [lnk_cmake]:  https://cmake.org/
