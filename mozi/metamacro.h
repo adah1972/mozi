@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021 Netcan
- * Copyright (c) 2021-2023 Wu Yongwei
+ * Copyright (c) 2021-2025 Wu Yongwei
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,7 +27,7 @@
 
 #define MOZI_PP_3RD_ARG(a, b, c, ...) c
 #define MOZI_VA_OPT_SUPPORTED_I(...) MOZI_PP_3RD_ARG(__VA_OPT__(, ), 1, 0, )
-#define MOZI_VA_OPT_SUPPORTED MOZI_VA_OPT_SUPPORTED_I(?)
+#define MOZI_VA_OPT_SUPPORTED MOZI_VA_OPT_SUPPORTED_I(_)
 
 // Traditional MSVC requires a special EXPAND phase
 #if (defined(_MSC_VER) && !defined(_MSVC_TRADITIONAL)) ||                  \
