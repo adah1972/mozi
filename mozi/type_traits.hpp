@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Wu Yongwei
+ * Copyright (c) 2023-2026 Wu Yongwei
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -74,6 +74,7 @@ inline constexpr bool is_pair_v = is_pair<T>::value;
 template <typename T, typename = void>
 struct is_tuple_like : std::false_type {};
 template <typename T>
+// NOLINTNEXTLINE(modernize-type-traits) tuple_size_v must NOT be used!
 struct is_tuple_like<T, std::void_t<decltype(std::tuple_size<T>::value)>>
     : std::true_type {};
 template <typename T>

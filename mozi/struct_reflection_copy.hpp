@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Wu Yongwei
+ * Copyright (c) 2023-2026 Wu Yongwei
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -127,7 +127,7 @@ enum class missing_fields : std::size_t {};
 
 template <missing_fields MissingFields = missing_fields{0},
           typename T, typename U>
-constexpr void copy_same_name_fields(T&& src, U& dest) // NOLINT
+constexpr void copy_same_name_fields(T&& src, U& dest)
 {
     constexpr size_t actual_missing_fields =
         count_missing_fields<std::decay_t<T>, std::decay_t<U>>();
