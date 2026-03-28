@@ -98,8 +98,9 @@ struct is_char_pointer : std::false_type {};
 template <typename T>
 struct is_char_pointer<
     T,
-    std::enable_if_t<std::is_pointer_v<T> &&
-                     is_char_v<std::remove_cv_t<std::remove_pointer_t<T>>>>>
+    std::enable_if_t<
+        std::is_pointer_v<T> &&
+        std::is_same_v<std::remove_cv_t<std::remove_pointer_t<T>>, char>>>
     : std::true_type {};
 template <typename T>
 inline constexpr bool is_char_pointer_v = is_char_pointer<T>::value;

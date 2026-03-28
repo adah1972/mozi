@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Wu Yongwei
+ * Copyright (c) 2023-2026 Wu Yongwei
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -78,7 +78,7 @@ void output_normal(T&& obj, std::ostream& os)
     // The main different between output_normal and print is how they
     // treat characters and strings at the outermost level
     using DT = std::decay_t<T>;
-    if constexpr (is_char_v<DT> || is_char_pointer_v<DT> ||
+    if constexpr (std::is_same_v<DT, char> || is_char_pointer_v<DT> ||
                   std::is_same_v<DT, std::string> ||
                   std::is_same_v<DT, std::string_view>) {
         os << obj;
@@ -175,10 +175,9 @@ void output_tuple_members(std::ostream& os, const Tup& tup, int depth,
 
 } // namespace detail
 
-template <typename T>
-struct printer<T, std::enable_if_t<std::is_same_v<T, char> ||
-                                   std::is_same_v<T, signed char>>> {
-    void operator()(T ch, std::ostream& os, int /*depth*/) const
+template <>
+struct printer<char> {
+    void operator()(char ch, std::ostream& os, int /*depth*/) const
     {
         // chars and signed chars are output as characters
 #if MOZI_PRINT_USE_FMTLIB
@@ -189,9 +188,20 @@ struct printer<T, std::enable_if_t<std::is_same_v<T, char> ||
     }
 };
 
-template <typename T>
-struct printer<T, std::enable_if_t<std::is_same_v<T, unsigned char>>> {
-    void operator()(T value, std::ostream& os, int /*depth*/) const
+template <>
+struct printer<signed char> {
+    void operator()(signed char value, std::ostream& os,
+                    int /*depth*/) const
+    {
+        // signed chars are output as signed integers
+        os << static_cast<int>(value);
+    }
+};
+
+template <>
+struct printer<unsigned char> {
+    void operator()(unsigned char value, std::ostream& os,
+                    int /*depth*/) const
     {
         // unsigned chars are output as unsigned integers
         os << static_cast<unsigned>(value);
