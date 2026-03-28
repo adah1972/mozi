@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Wu Yongwei
+ * Copyright (c) 2024-2026 Wu Yongwei
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -74,7 +74,7 @@ struct serializer<bool> {
 };
 
 template <typename T>
-struct serializer<T, std::enable_if_t<is_char_v<T>>> {
+struct serializer<T, std::enable_if_t<is_ordinary_char_v<T>>> {
     static void serialize(T value, serialize_t& dest)
     {
         dest.push_back(static_cast<std::byte>(value));

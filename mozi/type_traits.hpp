@@ -80,17 +80,17 @@ struct is_tuple_like<T, std::void_t<decltype(std::tuple_size<T>::value)>>
 template <typename T>
 inline constexpr bool is_tuple_like_v = is_tuple_like<T>::value;
 
-// Type trait for char types
+// Type trait for ordinary character types: (signed|unsigned)? char
 template <typename T, typename = void>
-struct is_char : std::false_type {};
+struct is_ordinary_char : std::false_type {};
 template <>
-struct is_char<char> : std::true_type {};
+struct is_ordinary_char<char> : std::true_type {};
 template <>
-struct is_char<signed char> : std::true_type {};
+struct is_ordinary_char<signed char> : std::true_type {};
 template <>
-struct is_char<unsigned char> : std::true_type {};
+struct is_ordinary_char<unsigned char> : std::true_type {};
 template <typename T>
-inline constexpr bool is_char_v = is_char<T>::value;
+inline constexpr bool is_ordinary_char_v = is_ordinary_char<T>::value;
 
 // Type trait for char pointer types
 template <typename T, typename = void>
@@ -112,12 +112,12 @@ struct promote_char {
 };
 template <typename T>
 struct promote_char<
-    T, std::enable_if_t<is_char_v<T> && std::is_signed_v<T>>> {
+    T, std::enable_if_t<is_ordinary_char_v<T> && std::is_signed_v<T>>> {
     using type = int;
 };
 template <typename T>
 struct promote_char<
-    T, std::enable_if_t<is_char_v<T> && std::is_unsigned_v<T>>> {
+    T, std::enable_if_t<is_ordinary_char_v<T> && std::is_unsigned_v<T>>> {
     using type = unsigned;
 };
 template <typename T>
